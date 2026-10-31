@@ -69,8 +69,6 @@ button{font:inherit;color:inherit}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--ink)}
 #stage{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1s ease}
 #stage.ready{opacity:1}
-#bd{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;filter:brightness(.4) saturate(1.15);transform:scale(1.12)}
-.stage.band #bd{display:block}
 .shade{position:absolute;inset:0;pointer-events:none;
   background:
    linear-gradient(to bottom,rgba(12,13,15,.55) 0%,rgba(12,13,15,0) 18%),
@@ -330,7 +328,6 @@ legend span{display:grid;place-items:center;width:20px;height:20px;border-radius
 <main>
 <section class="story" id="story" aria-label="What happens to your car">
   <div class="stage" id="stageWrap">
-    <canvas id="bd" width="40" height="23" aria-hidden="true"></canvas>
     <canvas id="stage" aria-hidden="true"></canvas>
     <div class="shade" aria-hidden="true"></div>
 
@@ -654,6 +651,8 @@ const CAR = {"cols":[null,null,null,null,null,null,null,null,null,null,null,null
 /* AI video clips, exported as WebP frame sequences. t = where each frame sits along the scroll, measured from how much
    the picture changes, so the camera moves at an even pace instead of rushing through the fast part of a clip */
 const CLIPS = {"a":{"n":61,"t":[0.0,0.0069,0.0141,0.0234,0.0302,0.0371,0.044,0.0511,0.0584,0.0674,0.0768,0.0871,0.0977,0.1092,0.1208,0.1331,0.1452,0.1588,0.1724,0.1873,0.2027,0.2205,0.2394,0.26,0.2821,0.3071,0.3332,0.361,0.3905,0.4229,0.4563,0.4914,0.5267,0.5642,0.6009,0.6363,0.6708,0.7045,0.7354,0.7631,0.7879,0.8101,0.8287,0.8438,0.8555,0.8633,0.8723,0.8826,0.8943,0.9091,0.9229,0.9324,0.9409,0.9498,0.9573,0.9651,0.9728,0.9795,0.9866,0.9933,1.0]},"b":{"n":61,"t":[0.0,0.006,0.0132,0.021,0.0294,0.0386,0.0483,0.0586,0.0696,0.0817,0.0945,0.1082,0.1229,0.1388,0.1556,0.1733,0.1922,0.2121,0.2327,0.2543,0.2767,0.2999,0.3239,0.349,0.375,0.4013,0.4277,0.4545,0.482,0.5096,0.5379,0.5647,0.5927,0.62,0.6466,0.6729,0.6999,0.7277,0.7549,0.7814,0.8036,0.8233,0.841,0.858,0.8745,0.889,0.9021,0.9133,0.9232,0.932,0.9399,0.947,0.9534,0.96,0.9662,0.9722,0.978,0.9837,0.9892,0.9946,1.0]},"c":{"n":59,"t":[0.0,0.0066,0.0128,0.0192,0.0254,0.0319,0.0388,0.048,0.0609,0.0764,0.0931,0.111,0.1303,0.151,0.173,0.1958,0.2201,0.2454,0.2716,0.2987,0.3274,0.3567,0.3867,0.416,0.4447,0.472,0.4985,0.5241,0.5494,0.574,0.5983,0.6216,0.6449,0.6677,0.69,0.7113,0.7324,0.7527,0.772,0.7907,0.8092,0.8269,0.8441,0.8608,0.8768,0.891,0.9033,0.9134,0.9227,0.9314,0.9397,0.9478,0.9558,0.9636,0.9712,0.9787,0.986,0.9931,1.0]},"e":{"n":61,"t":[0.0,0.0072,0.0141,0.0213,0.0295,0.0409,0.0565,0.0739,0.0948,0.1194,0.1468,0.1759,0.2054,0.2393,0.2748,0.3095,0.3451,0.3843,0.4157,0.4407,0.4642,0.4908,0.5073,0.5199,0.5359,0.5564,0.577,0.5981,0.6149,0.6301,0.6484,0.6666,0.6828,0.6971,0.7064,0.7164,0.7285,0.7451,0.7617,0.7797,0.7966,0.8126,0.824,0.8336,0.8411,0.8518,0.8625,0.8748,0.8872,0.8996,0.9097,0.9184,0.9255,0.9349,0.9446,0.9549,0.9646,0.9752,0.9844,0.9926,1.0]},"d":{"n":73,"t":[0.0,0.0075,0.0166,0.0273,0.0393,0.0535,0.0693,0.0866,0.1055,0.1261,0.1477,0.17,0.1928,0.2158,0.2393,0.2629,0.2865,0.3099,0.333,0.3556,0.378,0.3997,0.4205,0.4407,0.4606,0.4801,0.4997,0.519,0.5376,0.5555,0.5728,0.5895,0.6058,0.6217,0.6371,0.6522,0.6667,0.681,0.6947,0.7081,0.7212,0.7341,0.747,0.7596,0.7717,0.7837,0.7952,0.8063,0.8172,0.8277,0.8381,0.8485,0.8587,0.8696,0.8797,0.8886,0.897,0.9051,0.913,0.9205,0.9278,0.9348,0.9416,0.9482,0.9546,0.9608,0.9669,0.9728,0.9786,0.9842,0.9896,0.9949,1.0]}};
+/* phone (9:16) versions of the same clips */
+const CLIPS_M = {"a":{"n":61,"t":[0.0,0.0075,0.0146,0.0225,0.0346,0.044,0.0519,0.0593,0.0665,0.0745,0.0823,0.0914,0.1008,0.1129,0.1254,0.1399,0.1548,0.1721,0.1896,0.2087,0.2274,0.2488,0.2703,0.2932,0.3161,0.3414,0.3668,0.3948,0.4219,0.4521,0.4806,0.5104,0.5374,0.567,0.5943,0.622,0.6482,0.6756,0.7008,0.7255,0.7488,0.7726,0.7948,0.8168,0.837,0.8566,0.8738,0.8897,0.9029,0.9145,0.9241,0.9326,0.9401,0.9483,0.9562,0.9637,0.971,0.9786,0.9858,0.993,1.0]},"b":{"n":61,"t":[0.0,0.0066,0.0148,0.0231,0.0318,0.0409,0.0501,0.0598,0.0702,0.0812,0.0926,0.1049,0.1184,0.1333,0.1504,0.1696,0.1911,0.2151,0.2402,0.2672,0.2956,0.3255,0.3563,0.3878,0.4194,0.4521,0.4857,0.5209,0.5549,0.5889,0.6236,0.6595,0.6937,0.7227,0.7457,0.7641,0.7802,0.7951,0.8143,0.8339,0.8506,0.8646,0.8766,0.887,0.8963,0.9049,0.9127,0.9201,0.9271,0.9339,0.9405,0.9468,0.9529,0.9591,0.965,0.9709,0.9768,0.9826,0.9884,0.9942,1.0]},"c":{"n":61,"t":[0.0,0.0063,0.014,0.0224,0.0328,0.0461,0.0623,0.0812,0.1024,0.1247,0.148,0.1717,0.1962,0.2206,0.2449,0.2689,0.293,0.3167,0.3402,0.3635,0.3867,0.4097,0.4325,0.4551,0.4775,0.4996,0.5212,0.5427,0.5641,0.5852,0.6059,0.6262,0.6462,0.6653,0.6832,0.7003,0.7171,0.733,0.7479,0.8318,0.8447,0.8575,0.8692,0.8794,0.8888,0.8976,0.9062,0.9146,0.9225,0.93,0.9373,0.9443,0.9509,0.9574,0.9637,0.9698,0.976,0.9821,0.9881,0.994,1.0]},"e":{"n":61,"t":[0.0,0.0071,0.0138,0.0207,0.0274,0.0344,0.0418,0.0506,0.0602,0.0707,0.0816,0.0927,0.1037,0.1152,0.1268,0.1385,0.1502,0.1656,0.3654,0.3903,0.4147,0.4393,0.467,0.4947,0.5288,0.5564,0.5813,0.6043,0.6185,0.6367,0.6581,0.6821,0.7019,0.7159,0.728,0.7394,0.7514,0.7666,0.7829,0.7982,0.8132,0.8273,0.8415,0.8542,0.8647,0.8738,0.8816,0.8904,0.8994,0.9093,0.9186,0.9271,0.9348,0.9425,0.9505,0.959,0.9675,0.9764,0.985,0.9929,1.0]},"d":{"n":73,"t":[0.0,0.0076,0.0166,0.0273,0.0395,0.0538,0.0693,0.086,0.1037,0.1222,0.1414,0.1613,0.1815,0.2025,0.223,0.2434,0.2635,0.2834,0.3023,0.3214,0.3404,0.3595,0.3778,0.3954,0.4127,0.4299,0.4464,0.4628,0.4793,0.4963,0.5135,0.5311,0.5489,0.5666,0.5839,0.6011,0.6177,0.6344,0.6511,0.6676,0.6838,0.6997,0.7148,0.7293,0.7432,0.7573,0.7709,0.7841,0.7969,0.8101,0.8227,0.8348,0.8464,0.8579,0.8688,0.8792,0.889,0.8986,0.9092,0.918,0.926,0.9336,0.9409,0.9477,0.9543,0.9606,0.9668,0.9727,0.9785,0.9841,0.9895,0.9949,1.0]}};
 
 /* split headline letters for the reveal */
 document.querySelectorAll('.hl .l1, .hl .blk > span').forEach((line, n) => {
@@ -679,11 +678,17 @@ const hint = document.getElementById('hint'), bar = document.getElementById('bar
 const STEPS = [['Step 1', 'Wash'], ['Step 2', 'Inspect'], ['Step 3', 'Polish + ceramic'], ['Ready', 'Pick-up']];
 const RANGES = [[0, .2], [.2, .47], [.47, .73], [.73, 1.01]];
 
+/* phones (tall screens) get their own 9:16 version of every shot; everything else gets the 16:9 set */
+const PHONE = innerWidth / innerHeight < .9;
+const SET = PHONE ? CLIPS_M : CLIPS;
 const img = {};
 const loadImg = (k, src) => new Promise(res => { const i = new Image(); i.onload = () => { img[k] = i; res(); }; i.onerror = res; i.src = src; });
-const loaded = Promise.all([loadImg('clean', 'assets/clean.jpg'), loadImg('dirty', 'assets/dirty.jpg'), loadImg('mask', 'assets/mask_full.png')]);
-/* desktop opening: the same shot with more workshop around it, so the car starts further away */
-loadImg('cleanW', 'assets/clean_wide.jpg'); loadImg('dirtyW', 'assets/dirty_wide.jpg');
+const loaded = Promise.all([
+  loadImg('clean', PHONE ? 'assets/p_clean.jpg' : 'assets/clean.jpg'),
+  loadImg('dirty', PHONE ? 'assets/p_dirty.jpg' : 'assets/dirty.jpg'),
+  loadImg('mask', 'assets/mask_full.png')]);
+/* desktop: the opening and closing shots with more workshop around them, so the car sits further away */
+if (!PHONE) { loadImg('cleanW', 'assets/clean_wide.jpg'); loadImg('dirtyW', 'assets/dirty_wide.jpg'); loadImg('endW', 'assets/end_wide.jpg'); }
 
 let W = 0, H = 0, DPR = 1, dirty = true;
 const off = document.createElement('canvas'), octx = off.getContext('2d');
@@ -693,8 +698,6 @@ function resize() {
   /* full sharpness on phones; cap the pixel count on very large monitors so drawing stays fast */
   /* phones: full 3x sharpness. Desktop: only as sharp as the 1920px frames can fill, beyond that is wasted work */
   DPR = Math.min(window.devicePixelRatio || 1, portrait() ? 3 : Math.max(1, 2200 / W));
-  wrap.classList.toggle('band', portrait());
-  maskKey = '';
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   off.width = cv.width; off.height = cv.height; octx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -703,68 +706,38 @@ function resize() {
 
 /* ---------- scroll timeline ---------- */
 const TL = { a: [.205, .36], b: [.36, .47], c: [.47, .6], e: [.615, .72], d: [.745, .93] };
-const WASH = [.02, .18], PUSH = [.14, .19], TO_A = [.19, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
+const WASH = [.02, .18], PUSH = [.14, .19], OUT = [.93, .975], TO_A = [.19, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
 const u = k => clamp((sp - TL[k][0]) / (TL[k][1] - TL[k][0]));
 
 /* ---------- framing ----------
-   Desktop and landscape: the shot fills the screen.
-   Portrait phones: the 16:9 shot sits in a band across the screen, wide enough to show the whole car,
-   over a blurred copy of itself. The band widens for the paint close-ups and narrows again on the pull-back. */
-const K_WIDE = 1, K_CLOSE = 1.6, BAND_Y = .36;
-function bandK() {
-  if (sp < TL.b[0]) return K_WIDE;
-  if (sp < TL.c[0]) return lerp(K_WIDE, K_CLOSE, io(ss(.25, 1, u('b'))));
-  if (sp < TL.d[0]) return K_CLOSE;
-  return lerp(K_CLOSE, K_WIDE, io(clamp(u('d') / .8)));
-}
-/* where the original shot sits inside the wide one (measured), and the push-in from wide to the original framing */
-const WBOX = { x: .1995, y: .1190, w: .5961, h: .7945 };
-function wideRect() {
-  const im = img.cleanW, iw = im.naturalWidth, ih = im.naturalHeight;
-  const s0 = Math.max(W / iw, H / ih), s1 = Math.max(W / (WBOX.w * iw), H / (WBOX.h * ih));
-  const z = io(clamp((sp - PUSH[0]) / (PUSH[1] - PUSH[0])));
-  const s = Math.exp(lerp(Math.log(s0), Math.log(s1), z));
-  const cx = lerp(WBOX.x + WBOX.w / 2, WBOX.x + WBOX.w / 2, z), cy = lerp(.5, WBOX.y + WBOX.h / 2, z);
+   Every shot fills the screen. Boxes say where the original shot sits inside a wider or taller one (measured),
+   so effects and sparkles can be placed on the car and the camera can move between the two framings. */
+const WBOX = { x: .1995, y: .1190, w: .5961, h: .7945 };   /* desktop opening, inside clean_wide / dirty_wide */
+const EBOX = { x: .1888, y: .0893, w: .5872, h: .7826 };   /* desktop ending, inside end_wide */
+const PBOX = { x: .0026, y: .3728, w: .9975, h: .3148 };   /* phone opening, inside p_clean / p_dirty */
+const PEBOX = { x: .0026, y: .4237, w: .9975, h: .3148 };  /* phone ending, inside the last pull-back frame */
+const innerOf = (pl, box = WBOX) => ({ dx: pl.dx + box.x * pl.dw, dy: pl.dy + box.y * pl.dh, dw: box.w * pl.dw, dh: box.h * pl.dh });
+/* k = 0 shows the whole wide image, k = 1 shows just the box, filling the screen */
+function zoomRect(im, box, k) {
+  const iw = im.naturalWidth, ih = im.naturalHeight;
+  const s0 = Math.max(W / iw, H / ih), s1 = Math.max(W / (box.w * iw), H / (box.h * ih));
+  const s = Math.exp(lerp(Math.log(s0), Math.log(s1), k));
+  const cx = box.x + box.w / 2, cy = lerp(.5, box.y + box.h / 2, k);
   const dw = iw * s, dh = ih * s;
   return { dx: Math.min(0, Math.max(W - dw, W / 2 - cx * dw)), dy: Math.min(0, Math.max(H - dh, H / 2 - cy * dh)), dw, dh };
 }
-const innerOf = pl => ({ dx: pl.dx + WBOX.x * pl.dw, dy: pl.dy + WBOX.y * pl.dh, dw: WBOX.w * pl.dw, dh: WBOX.h * pl.dh });
 function frameRect(iw, ih) {
-  if (!portrait()) {
-    const s = Math.max(W / iw, H / ih), dw = iw * s, dh = ih * s;
-    return { dx: (W - dw) / 2, dy: (H - dh) / 2, dw, dh };
-  }
-  const dw = W * bandK(), dh = dw * ih / iw;
-  return { dx: (W - dw) / 2, dy: H * BAND_Y - dh / 2, dw, dh };
+  const s = Math.max(W / iw, H / ih), dw = iw * s, dh = ih * s;
+  return { dx: (W - dw) / 2, dy: (H - dh) / 2, dw, dh };
 }
 const at = (pl, ix, iy) => [pl.dx + ix * pl.dw, pl.dy + iy * pl.dh];
 const draw = (im, pl, a = 1) => { if (!im || a <= 0) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(im, pl.dx, pl.dy, pl.dw, pl.dh); ctx.globalAlpha = 1; };
-
-/* portrait phones: a blurred copy of the shot fills the screen behind the band.
-   The copy is a 40x23 canvas the browser stretches, and the band's soft top and bottom edges are a CSS mask,
-   so neither costs a full-screen redraw. */
-const bdC = document.getElementById('bd'), bctx = bdC.getContext('2d');
-let bdImg = null, maskKey = '';
-function backdrop(im) {
-  if (!portrait() || !im || im === bdImg) return;
-  bdImg = im; bctx.drawImage(im, 0, 0, 40, 23);
-}
-function bandMask(pl) {
-  let key = 'none';
-  if (portrait()) {
-    const f = Math.round(Math.min(60, pl.dh * .12)), top = Math.round(pl.dy), bot = Math.round(pl.dy + pl.dh);
-    key = `linear-gradient(to bottom, transparent ${top}px, #000 ${top + f}px, #000 ${bot - f}px, transparent ${bot}px)`;
-  }
-  if (key === maskKey) return;
-  maskKey = key;
-  cv.style.webkitMaskImage = key; cv.style.maskImage = key;
-}
 
 /* ---------- frame sequences ----------
    Frames load around wherever the reader is: the current clip and the next one first,
    coarse to fine (every 8th frame, then every 4th...), then the rest. */
 const seq = {}, busy = new Set(), decoded = new Set();
-for (const k of Object.keys(CLIPS)) seq[k] = new Array(CLIPS[k].n).fill(null);
+for (const k of Object.keys(SET)) seq[k] = new Array(SET[k].n).fill(null);
 const ORDER = ['a', 'b', 'c', 'e', 'd'];
 function clipAt(p) {
   if (p < TL.b[0]) return 'a';
@@ -777,8 +750,8 @@ function* wanted() {
   const ci = ORDER.indexOf(clipAt(sp));
   const near = [ORDER[ci], ORDER[ci + 1]].filter(Boolean);
   const rest = ORDER.filter(k => !near.includes(k));
-  for (const k of near) for (const step of [8, 4, 2, 1]) for (let i = 0; i < CLIPS[k].n; i += step) yield [k, i];
-  for (const step of [8, 4, 2, 1]) for (const k of rest) for (let i = 0; i < CLIPS[k].n; i += step) yield [k, i];
+  for (const k of near) for (const step of [8, 4, 2, 1]) for (let i = 0; i < SET[k].n; i += step) yield [k, i];
+  for (const step of [8, 4, 2, 1]) for (const k of rest) for (let i = 0; i < SET[k].n; i += step) yield [k, i];
 }
 function pump() {
   if (busy.size >= 6) return;
@@ -789,7 +762,7 @@ function pump() {
     im.decoding = 'async';
     im.onload = () => { seq[k][i] = im; busy.delete(k + i); dirty = true; pump(); };
     im.onerror = () => { busy.delete(k + i); setTimeout(pump, 800); };
-    im.src = `frames/${k}/${String(i + 1).padStart(3, '0')}.webp`;
+    im.src = `frames/${PHONE ? 'm/' : ''}${k}/${String(i + 1).padStart(3, '0')}.webp`;
     if (busy.size >= 6) return;
   }
 }
@@ -807,7 +780,7 @@ function warm(k, i) {
 }
 /* the exact frame for progress v (no blending, so moving shots never double up) */
 function frameOf(k, v) {
-  const t = CLIPS[k].t, n = t.length; v = clamp(v);
+  const t = SET[k].t, n = t.length; v = clamp(v);
   let lo = 0, hi = n - 1;
   while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (t[mid] <= v) lo = mid; else hi = mid; }
   const i = v - t[lo] < t[hi] - v ? lo : hi;
@@ -905,7 +878,6 @@ function washFx(pl, t, dt, full = pl, dirtyImg = img.dirty) {
   const w = io(clamp((sp - WASH[0]) / (WASH[1] - WASH[0]))), X = lerp(-50, W + 50, w);
   if (X >= W + 30) return;
   ctx.save();
-  if (portrait()) { ctx.beginPath(); ctx.rect(0, full.dy, W, full.dh); ctx.clip(); }
   ctx.beginPath(); ctx.moveTo(W + 20, -20);
   for (let y = -20; y <= H + 20; y += 9) ctx.lineTo(edgeX(X, y, t), y);
   ctx.lineTo(W + 20, H + 20); ctx.closePath();
@@ -943,30 +915,40 @@ function pick() {
 }
 /* identity of what's on screen: if it hasn't changed, there's nothing to redraw */
 let shown = '';
-const sceneKey = ({ base, over, overA, dip }) => (sp < TL.a[0] ? sp.toFixed(4) : '') + (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3) + '|' + (portrait() ? bandK().toFixed(4) : '');
+const sceneKey = ({ base, over, overA, dip }) => (sp < TL.a[0] || sp > OUT[0] ? sp.toFixed(4) : '') + (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3);
 
 function render(t, dt, sel) {
   ctx.clearRect(0, 0, W, H);
   if (!ready) return;
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   const { base, over, overA, dip } = sel;
-  let pl = frameRect(base.naturalWidth, base.naturalHeight), carPl = pl;
-  const wide = sp < TL.a[0] && !portrait() && img.cleanW && img.dirtyW;
-  if (wide) { pl = wideRect(); carPl = innerOf(pl); }
-  backdrop(overA > .5 ? over : base);
-  draw(wide ? img.cleanW : base, pl);
-  if (sp < TL.a[0]) washFx(carPl, t, dt, pl, wide ? img.dirtyW : img.dirty);
-  if (parts.length) { ctx.save(); if (portrait()) { ctx.beginPath(); ctx.rect(0, pl.dy, W, pl.dh); ctx.clip(); } stepParts(dt); ctx.restore(); }
+  let pl = frameRect(base.naturalWidth, base.naturalHeight), carPl = pl, still = base, dirtyImg = img.dirty;
+  if (sp < TL.a[0]) {
+    if (PHONE) carPl = innerOf(pl, PBOX);
+    else if (img.cleanW && img.dirtyW) {          /* start wide, push in to the drive clip's framing */
+      pl = zoomRect(img.cleanW, WBOX, io(clamp((sp - PUSH[0]) / (PUSH[1] - PUSH[0]))));
+      carPl = innerOf(pl); still = img.cleanW; dirtyImg = img.dirtyW;
+    }
+  }
+  draw(still, pl);
+  if (sp < TL.a[0]) washFx(carPl, t, dt, pl, dirtyImg);
+  if (parts.length) stepParts(dt);
+  /* desktop ending: keep pulling back from the door shot until the whole workshop is in view */
+  let glintPl = PHONE ? innerOf(pl, PEBOX) : pl;
+  if (!PHONE && img.endW && sp > OUT[0]) {
+    const epl = zoomRect(img.endW, EBOX, 1 - io(clamp((sp - OUT[0]) / (OUT[1] - OUT[0]))));
+    draw(img.endW, epl, ss(OUT[0], OUT[0] + .01, sp));
+    glintPl = innerOf(epl, EBOX);
+  }
   if (over && overA > 0) draw(over, frameRect(over.naturalWidth, over.naturalHeight), overA);
   if (dip > 0) { ctx.fillStyle = `rgba(12,13,15,${dip})`; ctx.fillRect(0, 0, W, H); }
 
   /* a few glints on the paint once the door is open */
   const fin = ss(.9, .97, sp);
   if (fin > 0 && base !== img.clean) for (let i = 0; i < CAR.g4.length; i++) {
-    const [ix, iy] = CAR.g4[i], tw = .5 + .5 * Math.sin(t * 2.2 + i * 1.7), [x, y] = at(pl, ix, iy);
-    glint(x, y, Math.min(pl.dw, H) * (.018 + .014 * tw), fin * (.2 + .6 * tw));
+    const [ix, iy] = CAR.g4[i], tw = .5 + .5 * Math.sin(t * 2.2 + i * 1.7), [x, y] = at(glintPl, ix, iy);
+    glint(x, y, Math.min(glintPl.dw, H) * (.018 + .014 * tw), fin * (.2 + .6 * tw));
   }
-  bandMask(pl);
 }
 
 const dockable = () => matchMedia('(min-width: 861px) and (min-height: 621px)').matches;
