@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lacquer Detail Atelier</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Hand wash, paint correction and ceramic coating. Scroll the car clean, then book your detail.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="preload" as="image" href="assets/dirty.jpg">
+<link rel="preload" as="image" href="assets/clean.jpg">
+<style>
+/* Layout: a pinned full-screen workshop stage the story scrolls through (wash, inspect, correct, pick-up), then the menu on light paper, then a dark close. */
+:root{
+  --ink:#0C0D0F;      /* workshop black, cool like the walls */
+  --ink-2:#16181B;
+  --ink-3:#24272B;
+  --bone:#EEEBE6;     /* paper for the menu */
+  --bone-2:#DEDAD3;
+  --mute:#9A9EA4;
+  --mute-ink:#5B5E62;
+  --cyan:#3FC6F2;     /* the workshop's LED accent strip */
+  --cyan-ink:#0A6684; /* cyan when it sits on paper */
+  --red:#D7261E;      /* Toronto Red, used sparingly */
+  --line:rgba(238,235,230,.14);
+  --line-ink:rgba(12,13,15,.16);
+
+  --f-display:"Archivo","Arial Narrow","Arial Black",system-ui,sans-serif;
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --gl:max(clamp(16px,3.4vw,52px),env(safe-area-inset-left,0px));
+  --gr:max(clamp(16px,3.4vw,52px),env(safe-area-inset-right,0px));
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ink);color:var(--bone);font:400 16px/1.55 var(--f-body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body.locked{overflow:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--ink)}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+.mono{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase}
+
+/* ---------- header ---------- */
+.top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:50;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;
+  padding:14px var(--gr) 14px var(--gl);border-bottom:1px solid transparent;transition:background .3s,border-color .3s}
+.top.solid{background:rgba(12,13,15,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom-color:var(--line)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;justify-self:start}
+.brand i{width:22px;height:14px;background:var(--red);clip-path:polygon(18% 0,100% 0,82% 100%,0 100%)}
+.brand b{font:900 21px/1 var(--f-display);font-stretch:62%;letter-spacing:.06em;text-transform:uppercase}
+.brand span{font:500 10.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.nav{display:flex;gap:26px}
+.nav a{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;opacity:.75;transition:opacity .2s}
+.nav a:hover{opacity:1}
+.pill{display:inline-flex;align-items:center;gap:10px;border:0;cursor:pointer;background:var(--cyan);color:var(--ink);font:700 14px/1 var(--f-body);
+  padding:12px 18px;border-radius:999px;text-decoration:none;transition:transform .25s var(--ease),box-shadow .25s;justify-self:end}
+.pill:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(63,198,242,.35)}
+.pill svg{width:14px;height:14px}
+@media (max-width:860px){.nav{display:none}.brand span{display:none}.top{grid-template-columns:1fr auto}}
+
+/* ---------- story stage ---------- */
+.story{position:relative;height:760vh}
+.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--ink)}
+#stage{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1s ease}
+#stage.ready{opacity:1}
+#bd{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;filter:brightness(.4) saturate(1.15);transform:scale(1.12)}
+.stage.band #bd{display:block}
+.shade{position:absolute;inset:0;pointer-events:none;
+  background:
+   linear-gradient(to bottom,rgba(12,13,15,.55) 0%,rgba(12,13,15,0) 18%),
+   linear-gradient(to top,rgba(12,13,15,.78) 0%,rgba(12,13,15,.25) 26%,rgba(12,13,15,0) 46%)}
+.chip{position:absolute;left:var(--gl);top:calc(env(safe-area-inset-top,0px) + 70px);display:flex;align-items:center;gap:8px;
+  padding:7px 12px;border-radius:999px;background:rgba(12,13,15,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.chip #chipStep{color:var(--mute)}
+.chip b{font-weight:500}
+
+
+.bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--line)}
+.bar::after{content:"";position:absolute;inset:0;background:var(--cyan);transform-origin:left;transform:scaleX(var(--p,0))}
+
+.chapters{position:absolute;left:var(--gl);right:var(--gr);bottom:calc(env(safe-area-inset-bottom,0px) + 8vh);height:0}
+.chap{position:absolute;left:0;bottom:0;width:min(100%,760px);opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s linear .45s}
+.chap.right{left:auto;right:0;text-align:right}
+.chap.right .sub{margin-left:auto}
+.chap.on{opacity:1;visibility:visible;transition-delay:0s}
+.eyebrow{margin:0 0 12px;color:var(--cyan)}
+.hl{margin:0;font-family:var(--f-display);font-weight:900;font-stretch:62%;text-transform:uppercase;
+  font-size:clamp(58px,15vw,96px);line-height:.86;letter-spacing:-.005em}
+.hl .l1,.hl .l2{display:block}
+.hl .l2{margin-top:.06em}
+.hl .l2 .blk{display:inline-block;background:var(--cyan);color:var(--ink);padding:.03em .12em .0em;transform:skewX(-8deg);box-shadow:0 10px 40px rgba(63,198,242,.25)}
+.hl .l2 .blk>span{display:inline-block;transform:skewX(8deg)}
+.hl .w{display:inline-block;white-space:nowrap}
+.hl .c{display:inline-block;opacity:0;transform:translateY(.28em);filter:blur(8px);
+  transition:opacity .45s ease,transform .6s var(--ease),filter .5s ease;transition-delay:calc(var(--i,0) * 24ms)}
+.chap.on .hl .c{opacity:1;transform:none;filter:none}
+.hl .l2 .blk{clip-path:inset(0 100% 0 0);transition:clip-path .6s var(--ease) .18s}
+.chap.right .hl .l2 .blk{clip-path:inset(0 0 0 100%)}
+.chap.on .hl .l2 .blk{clip-path:inset(0 0 0 0)}
+.sub{margin:16px 0 0;max-width:36ch;color:rgba(238,235,230,.86);font-size:clamp(15px,1.25vw,17px)}
+.chap .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.ghost{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;border:1px solid rgba(238,235,230,.35);background:transparent;cursor:pointer;text-decoration:none;font:600 14px/1 var(--f-body);transition:border-color .2s,background .2s}
+.ghost:hover{border-color:var(--bone);background:rgba(238,235,230,.06)}
+
+.hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--mute);transition:opacity .4s}
+.hint i{width:1px;height:34px;background:linear-gradient(var(--cyan),transparent);animation:drip 1.8s ease-in-out infinite;transform-origin:top}
+@keyframes drip{0%{transform:scaleY(0)}60%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
+
+@media (min-width:861px){
+  .hl{font-size:clamp(72px,min(8.4vw,15vh),150px)}
+  .chap{width:min(56vw,860px)}
+}
+@media (max-width:860px){
+  .chapters{bottom:calc(env(safe-area-inset-bottom,0px) + 70px)}
+  .chap.right{left:0;right:auto;text-align:left}
+  .chap.right .sub{margin-left:0}
+  .chap.right .hl .l2 .blk{clip-path:inset(0 100% 0 0)}
+  .chap.on.right .hl .l2 .blk{clip-path:inset(0 0 0 0)}
+  .hint{display:none}
+}
+
+/* booking dock: slides in at the end of the story (desktop) */
+.dock{position:absolute;right:var(--gr);top:calc(env(safe-area-inset-top,0px) + 76px);bottom:22px;width:340px;display:flex;flex-direction:column;
+  background:rgba(16,18,21,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  transform:translateX(calc(100% + 60px));transition:transform .7s var(--ease);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.stage.docked .dock{transform:none}
+.dock-head{padding:18px 18px 14px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,rgba(215,38,30,.28),rgba(215,38,30,0) 60%)}
+.dock-head p{margin:0 0 6px;color:var(--cyan)}
+.dock-head h3{margin:0;font:900 30px/.95 var(--f-display);font-stretch:62%;text-transform:uppercase}
+.dock-body{flex:1;overflow-y:auto;padding:14px 18px;display:grid;gap:14px;align-content:start}
+.dock-lbl{color:var(--mute);margin:0 0 8px}
+.dock .seg{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--ink)}
+.dock .seg span{text-align:center;padding:9px 4px;font-size:13px}
+.dock .seg input:checked+span{background:var(--bone);color:var(--ink)}
+.dock .opt{padding:11px 12px}
+.dock-foot{padding:14px 18px 18px;border-top:1px solid var(--line);display:grid;gap:12px}
+.dock-total{display:flex;justify-content:space-between;align-items:baseline}
+.dock-total b{font:900 34px/1 var(--f-display);font-stretch:70%;color:var(--cyan);font-variant-numeric:tabular-nums}
+.dock .pill{justify-content:center;width:100%;padding:14px}
+@media (max-width:860px),(max-height:620px){.dock{display:none}}
+
+/* ---------- spec strip ---------- */
+.spec{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px var(--gr) 18px var(--gl)}
+.spec ul{list-style:none;margin:0 auto;padding:0;max-width:1320px;display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:space-between;color:var(--mute)}
+.spec li{display:flex;align-items:center;gap:10px}
+.spec li::before{content:"";width:5px;height:5px;background:var(--cyan);border-radius:50%}
+
+/* ---------- sections ---------- */
+.wrap{max-width:1320px;margin:0 auto}
+.band{padding-left:var(--gl);padding-right:var(--gr);padding-block:clamp(72px,10vw,140px)}
+.h2{margin:0;font-family:var(--f-display);font-weight:900;font-stretch:62%;text-transform:uppercase;font-size:clamp(52px,8vw,120px);line-height:.88;text-wrap:balance}
+.h2 .blk{display:inline-block;background:var(--cyan);color:var(--ink);padding:0 .1em;transform:skewX(-8deg)}
+.h2 .blk>span{display:inline-block;transform:skewX(8deg)}
+.lede{max-width:52ch;font-size:clamp(16px,1.3vw,18px);color:rgba(238,235,230,.8);margin:22px 0 0}
+
+.gauge .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(36px,6vw,96px);align-items:start}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:44px;border-top:1px solid var(--line);padding-top:24px}
+.facts b{display:block;white-space:nowrap;font:900 clamp(34px,3.4vw,48px)/1 var(--f-display);font-stretch:70%;font-variant-numeric:tabular-nums}
+.facts span{display:block;margin-top:8px;color:var(--mute);font-size:14px;line-height:1.4}
+.sheet{background:var(--ink-2);border:1px solid var(--line);border-radius:8px;padding:clamp(20px,2.4vw,32px);min-width:0}
+.sheet-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--mute);padding-bottom:16px;border-bottom:1px dashed var(--line)}
+.sheet-head .tag{color:var(--ink);background:var(--cyan);padding:3px 8px;border-radius:3px}
+.sheet h3{margin:18px 0 4px;font:900 30px/1 var(--f-display);font-stretch:62%;text-transform:uppercase}
+.sheet .car{margin:0;color:var(--mute);font-size:14px}
+.tbl{overflow-x:auto;margin-top:18px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px;min-width:420px}
+th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line)}
+th{font:500 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-size:13px}
+td.up{color:var(--cyan)}
+.meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;margin-top:22px;font-size:14px}
+.meter .track{height:6px;background:var(--ink-3);border-radius:6px;position:relative;overflow:hidden}
+.meter .track i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--mute),var(--cyan));border-radius:6px}
+.meter .v{font-family:var(--f-mono);font-size:13px}
+@media (max-width:900px){.gauge .wrap{grid-template-columns:1fr}}
+@media (max-width:520px){.facts{grid-template-columns:1fr;gap:18px}}
+
+.menu{background:var(--bone);color:var(--ink)}
+.menu .eyebrow{color:var(--cyan-ink)}
+.menu-head{display:flex;justify-content:space-between;align-items:end;gap:28px;flex-wrap:wrap}
+.menu-head p{max-width:44ch;color:var(--mute-ink);margin:16px 0 0}
+.seg{display:inline-flex;padding:4px;border-radius:999px;background:var(--bone-2);gap:2px;flex-wrap:wrap}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:10px 16px;border-radius:999px;font:600 14px/1 var(--f-body);transition:background .2s,color .2s}
+.seg input:checked+span{background:var(--ink);color:var(--bone)}
+.seg input:focus-visible+span{outline:2px solid var(--cyan);outline-offset:2px}
+.seg-label{display:block;color:var(--mute-ink);margin-bottom:10px}
+.tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:56px;border-top:2px solid var(--ink)}
+.tier{padding:28px clamp(16px,2vw,32px) 32px;border-right:1px solid var(--line-ink);display:flex;flex-direction:column;gap:16px;min-width:0}
+.tier:first-child{padding-left:0}
+.tier:last-child{border-right:0;padding-right:0}
+.tier .top-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;color:var(--mute-ink)}
+.tier h3{margin:0;font:900 clamp(34px,3vw,44px)/1 var(--f-display);font-stretch:62%;text-transform:uppercase}
+.tier .price{font:900 clamp(60px,6vw,88px)/.9 var(--f-display);font-stretch:62%;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.tier p{margin:0;color:var(--mute-ink)}
+.tier ul{list-style:none;margin:0;padding:0;display:grid;gap:9px;font-size:15px}
+.tier li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:10px}
+.tier li::before{content:"";width:10px;height:2px;background:var(--ink);margin-top:.72em}
+.tier .book{margin-top:auto;align-self:flex-start;display:inline-flex;align-items:center;gap:10px;border:0;cursor:pointer;background:var(--ink);color:var(--bone);padding:13px 18px;border-radius:999px;font:700 14px/1 var(--f-body);transition:transform .25s var(--ease)}
+.tier .book:hover{transform:translateY(-1px)}
+.tier.feat{background:var(--ink);color:var(--bone);border-radius:8px;padding:28px clamp(18px,2vw,32px) 32px;margin:-14px 0;border-right:0}
+.tier.feat .top-row,.tier.feat p{color:var(--mute)}
+.tier.feat li::before{background:var(--cyan)}
+.tier.feat .book{background:var(--cyan);color:var(--ink)}
+.tier.feat .price{color:var(--cyan)}
+.addons{margin-top:64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:32px;border-top:1px solid var(--line-ink);padding-top:28px}
+.addons h3{margin:0;font:900 26px/1 var(--f-display);font-stretch:62%;text-transform:uppercase}
+.addons ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 32px}
+.addons li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line-ink)}
+.addons li b{font-family:var(--f-mono);font-weight:500;font-size:14px}
+@media (max-width:900px){
+  .tiers{grid-template-columns:1fr;border-top:0;gap:14px}
+  .tier,.tier:first-child,.tier:last-child{padding:24px 0;border-right:0;border-top:2px solid var(--ink)}
+  .tier.feat{margin:0;padding:24px 20px;border-top:0}
+  .addons{grid-template-columns:1fr}
+  .addons ul{grid-template-columns:1fr}
+}
+
+.faq .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:clamp(32px,6vw,96px)}
+details{border-bottom:1px solid var(--line)}
+details:first-child{border-top:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 0;font:600 clamp(17px,1.5vw,20px)/1.3 var(--f-body)}
+summary::-webkit-details-marker{display:none}
+summary i{flex:none;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);position:relative;transition:background .3s}
+summary i::before,summary i::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:1.5px;background:var(--bone);transform:translate(-50%,-50%)}
+summary i::after{transform:translate(-50%,-50%) rotate(90deg);transition:transform .3s var(--ease)}
+details[open] summary i{background:var(--cyan);border-color:var(--cyan)}
+details[open] summary i::before,details[open] summary i::after{background:var(--ink)}
+details[open] summary i::after{transform:translate(-50%,-50%) rotate(0deg)}
+details p{margin:0 0 22px;max-width:60ch;color:rgba(238,235,230,.78)}
+@media (max-width:900px){.faq .wrap{grid-template-columns:1fr}}
+
+.close{border-top:1px solid var(--line);position:relative;overflow:hidden}
+.close::before{content:"";position:absolute;inset:0;background:url("assets/pickup.jpg") center 60%/cover;opacity:.28}
+.close::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ink) 15%,rgba(12,13,15,.4))}
+.close .wrap{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:end;gap:32px;flex-wrap:wrap}
+.close .h2{font-size:clamp(60px,11vw,170px)}
+.foot{padding:28px var(--gr) calc(28px + env(safe-area-inset-bottom,0px)) var(--gl);border-top:1px solid var(--line);color:var(--mute)}
+.foot .wrap{display:flex;justify-content:space-between;gap:16px 32px;flex-wrap:wrap}
+.foot p{margin:0}
+
+/* ---------- booking drawer ---------- */
+.scrim{position:fixed;inset:0;z-index:70;background:rgba(6,7,8,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;transition:opacity .35s}
+.scrim.on{opacity:1}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:80;width:min(480px,100%);background:var(--ink-2);border-left:1px solid var(--line);
+  transform:translateX(102%);transition:transform .55s var(--ease);display:flex;flex-direction:column;visibility:hidden}
+.drawer.on{transform:none;visibility:visible}
+.drawer:not(.on){transition:transform .45s var(--ease),visibility 0s .45s}
+.d-head{display:flex;justify-content:space-between;align-items:start;gap:16px;padding:calc(env(safe-area-inset-top,0px) + 22px) max(22px,env(safe-area-inset-right,0px)) 18px 22px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,rgba(215,38,30,.25),rgba(215,38,30,0) 55%)}
+.d-head .eyebrow{margin:0 0 8px}
+.d-head h2{margin:0;font:900 40px/.9 var(--f-display);font-stretch:62%;text-transform:uppercase}
+.xbtn{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;cursor:pointer;display:grid;place-items:center}
+.xbtn:hover{background:var(--ink-3)}
+.d-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:8px max(22px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 22px}
+fieldset{border:0;margin:0;padding:22px 0;border-bottom:1px solid var(--line);display:grid;gap:12px;min-width:0}
+legend{padding:0;margin-bottom:12px;display:flex;align-items:center;gap:10px;font:500 11.5px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+legend span{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--cyan);color:var(--ink);font-size:11px}
+.drawer .seg{background:var(--ink);width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.drawer .seg span{text-align:center;padding:11px 6px}
+.drawer .seg input:checked+span{background:var(--bone);color:var(--ink)}
+.opt{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:border-color .2s,background .2s}
+.opt:hover{border-color:rgba(238,235,230,.32)}
+.opt input{margin:2px 0 0;accent-color:var(--cyan);width:18px;height:18px}
+.opt b{display:block;font-weight:600}
+.opt small{display:block;color:var(--mute);font-size:13px;line-height:1.4;margin-top:3px}
+.opt .amt{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.opt:has(input:checked){border-color:var(--cyan);background:rgba(63,198,242,.07)}
+.addgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.addgrid .opt{grid-template-columns:18px minmax(0,1fr);padding:11px 12px;font-size:14px}
+.addgrid .opt small{margin-top:1px}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.chipbtn{flex:none;border:1px solid var(--line);background:transparent;border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left;font-size:13px;line-height:1.25;min-width:68px;transition:border-color .2s,background .2s}
+.chipbtn b{display:block;font:600 16px/1.1 var(--f-body)}
+.chipbtn small{color:var(--mute);font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+.chipbtn[aria-pressed="true"]{background:var(--bone);color:var(--ink);border-color:var(--bone)}
+.chipbtn[aria-pressed="true"] small{color:var(--mute-ink)}
+.chipbtn:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}
+.times{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.times .chipbtn{min-width:0;text-align:center;font-family:var(--f-mono);font-size:13px}
+.field{display:grid;gap:6px;font-size:13px;color:var(--mute)}
+.field input{font:16px/1.3 var(--f-body);color:var(--bone);background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:12px 13px;width:100%}
+.field input:focus{outline:none;border-color:var(--cyan)}
+.field input[aria-invalid="true"]{border-color:#FF8A6B}
+.err{color:#FF9C80;font-size:13px;margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum{padding:20px 0 6px;display:grid;gap:8px;font-size:14px}
+.sum div{display:flex;justify-content:space-between;gap:16px}
+.sum span:last-child{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.sum .muted{color:var(--mute)}
+.sum .total{border-top:1px solid var(--line);padding-top:12px;margin-top:4px;font-size:16px;font-weight:600}
+.sum .total span:last-child{font:900 34px/1 var(--f-display);font-stretch:70%;color:var(--cyan)}
+.submit{width:100%;justify-content:center;padding:16px 18px;font-size:15px;margin-top:10px}
+.fine{color:var(--mute);font-size:12.5px;text-align:center;margin:12px 0 0}
+.done{padding:28px 0;display:grid;gap:14px}
+.done .ref{font:900 64px/1 var(--f-display);font-stretch:62%;color:var(--cyan)}
+.done p{margin:0;color:rgba(238,235,230,.82)}
+@media (max-width:420px){.addgrid{grid-template-columns:1fr}.times{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .hl .c{transition:opacity .2s;transform:none;filter:none}
+  .hl .l2 .blk{transition:none}
+  .hint i{animation:none}
+  .drawer,.scrim,.dock{transition-duration:.01s}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#story" aria-label="Lacquer Detail Atelier, back to top"><i aria-hidden="true"></i><b>Lacquer</b><span>Detail atelier</span></a>
+  <nav class="nav" aria-label="Sections">
+    <a href="#gauge">Process</a>
+    <a href="#menu">Prices</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <button class="pill" type="button" data-book>Book a detail
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</header>
+
+<main>
+<section class="story" id="story" aria-label="What happens to your car">
+  <div class="stage" id="stageWrap">
+    <canvas id="bd" width="40" height="23" aria-hidden="true"></canvas>
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div class="shade" aria-hidden="true"></div>
+
+    <div class="chip mono" aria-live="polite"><span class="dot"></span><span id="chipStep">Step 1</span><b id="chipName">Wash</b></div>
+
+    <div class="chapters">
+      <article class="chap right on" data-i="0">
+        <p class="eyebrow mono">01 · Wash</p>
+        <h1 class="hl"><span class="l1">Scroll to</span><span class="l2"><span class="blk"><span>wash it.</span></span></span></h1>
+        <p class="sub">Snow foam, two buckets, clay. Every panel washed by hand.</p>
+      </article>
+      <article class="chap" data-i="1">
+        <p class="eyebrow mono">02 · Inspect</p>
+        <h2 class="hl"><span class="l1">Look</span><span class="l2"><span class="blk"><span>closer.</span></span></span></h2>
+        <p class="sub">Under the workshop lights, every swirl and scratch shows. We map them before we touch a pad.</p>
+      </article>
+      <article class="chap right" data-i="2">
+        <p class="eyebrow mono">03 · Polish + ceramic</p>
+        <h2 class="hl"><span class="l1">Swirls out.</span><span class="l2"><span class="blk"><span>Glass on.</span></span></span></h2>
+        <p class="sub">Polish takes the swirls out. A ceramic coat seals the gloss in, so water beads and rolls off.</p>
+      </article>
+      <article class="chap" data-i="3">
+        <p class="eyebrow mono">04 · Pick-up</p>
+        <h2 class="hl"><span class="l1">Keys back.</span><span class="l2"><span class="blk"><span>Jaw drops.</span></span></span></h2>
+        <p class="sub">Book your detail. You see the full price before we start.</p>
+        <div class="ctas">
+          <button class="pill" type="button" data-book>Book it
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <a class="ghost" href="#menu">See prices</a>
+        </div>
+      </article>
+    </div>
+
+    <aside class="dock" aria-label="Quick quote">
+      <div class="dock-head"><p class="mono">Lacquer · Booking</p><h3>Book your detail</h3></div>
+      <div class="dock-body">
+        <div>
+          <p class="dock-lbl mono" id="dockSizeLbl">Your car</p>
+          <div class="seg" role="radiogroup" aria-labelledby="dockSizeLbl">
+            <label><input type="radio" name="dockSize" id="dk-coupe" value="coupe" checked><span>Coupe</span></label>
+            <label><input type="radio" name="dockSize" id="dk-sedan" value="sedan"><span>Sedan</span></label>
+            <label><input type="radio" name="dockSize" id="dk-suv" value="suv"><span>SUV</span></label>
+            <label><input type="radio" name="dockSize" id="dk-truck" value="truck"><span>Truck</span></label>
+          </div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <p class="dock-lbl mono" style="margin:0">The work</p>
+          <label class="opt"><input type="radio" name="dockPkg" id="dp-wash" value="wash"><span><b>Wash</b><small>2 hrs</small></span><span class="amt" data-price="wash">$95</span></label>
+          <label class="opt"><input type="radio" name="dockPkg" id="dp-enhance" value="enhance" checked><span><b>Enhance</b><small>1 day</small></span><span class="amt" data-price="enhance">$390</span></label>
+          <label class="opt"><input type="radio" name="dockPkg" id="dp-ceramic" value="ceramic"><span><b>Ceramic</b><small>2–3 days</small></span><span class="amt" data-price="ceramic">$1,290</span></label>
+        </div>
+      </div>
+      <div class="dock-foot">
+        <div class="dock-total"><span class="mono" style="color:var(--mute)">From</span><b id="dockTotal">$390</b></div>
+        <button class="pill" type="button" data-book>Pick a time
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <div class="hint mono" id="hint" aria-hidden="true">Scroll<i></i></div>
+    <div class="bar" id="bar" aria-hidden="true"></div>
+  </div>
+</section>
+
+<div class="spec mono" aria-label="How we work">
+  <ul>
+    <li>pH-neutral snow foam</li>
+    <li>Two-bucket hand wash</li>
+    <li>Inspection lighting</li>
+    <li>Paint measured in µm</li>
+    <li>9H ceramic, 5-year</li>
+  </ul>
+</div>
+
+<section class="band gauge" id="gauge" aria-labelledby="gaugeTitle">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow mono">Before the polisher comes out</p>
+      <h2 class="h2" id="gaugeTitle">We measure <span class="blk"><span>first.</span></span></h2>
+      <p class="lede">Factory clear coat is about as thick as a sheet of paper. Every polish removes a little of it, so we read each panel with a paint gauge and only take what the defects need. You get the readings with your keys.</p>
+      <div class="facts">
+        <div><b>35–50 µm</b><span>Typical factory clear coat</span></div>
+        <div><b>2–4 µm</b><span>What a two-stage polish removes</span></div>
+        <div><b>24 h</b><span>Indoor cure before a ceramic car goes home</span></div>
+      </div>
+    </div>
+    <div class="sheet" aria-label="Example job sheet">
+      <div class="sheet-head mono"><span>Job sheet · example</span><span class="tag">Polish + Ceramic</span></div>
+      <h3>BMW M4 Competition</h3>
+      <p class="car">G82 · Toronto Red · came in muddy, left like glass</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Panel</th><th class="n">Before</th><th class="n">After</th><th class="n">Gloss (GU)</th></tr></thead>
+          <tbody>
+            <tr><td>Bonnet</td><td class="n">118 µm</td><td class="n">115 µm</td><td class="n up">76 → 93</td></tr>
+            <tr><td>Front bumper</td><td class="n">131 µm</td><td class="n">129 µm</td><td class="n up">71 → 90</td></tr>
+            <tr><td>Left wing</td><td class="n">104 µm</td><td class="n">102 µm</td><td class="n up">78 → 94</td></tr>
+            <tr><td>Driver door</td><td class="n">109 µm</td><td class="n">106 µm</td><td class="n up">74 → 92</td></tr>
+            <tr><td>Roof (carbon)</td><td class="n">—</td><td class="n">—</td><td class="n up">80 → 91</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="meter"><span class="mono">Defects removed</span><span class="track"><i style="width:92%"></i></span><span class="v">≈92%</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="band menu" id="menu" aria-labelledby="menuTitle">
+  <div class="wrap">
+    <div class="menu-head">
+      <div>
+        <p class="eyebrow mono">Prices you see up front</p>
+        <h2 class="h2" id="menuTitle">The menu</h2>
+        <p>Priced by size, because a truck has a lot more paint than a coupe. Choose yours and the prices update.</p>
+      </div>
+      <div>
+        <span class="seg-label mono" id="menuSizeLbl">Vehicle size</span>
+        <div class="seg" role="radiogroup" aria-labelledby="menuSizeLbl">
+          <label><input type="radio" name="menuSize" id="ms-coupe" value="coupe" checked><span>Coupe</span></label>
+          <label><input type="radio" name="menuSize" id="ms-sedan" value="sedan"><span>Sedan</span></label>
+          <label><input type="radio" name="menuSize" id="ms-suv" value="suv"><span>SUV</span></label>
+          <label><input type="radio" name="menuSize" id="ms-truck" value="truck"><span>Truck</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="tiers">
+      <article class="tier">
+        <div class="top-row mono"><span>Maintenance</span><span>2 hrs</span></div>
+        <h3>Wash</h3>
+        <div class="price" data-price="wash">$95</div>
+        <p>For cars already in good shape that want to stay that way.</p>
+        <ul>
+          <li>Snow foam and two-bucket hand wash</li>
+          <li>Wheel faces, barrels and arches</li>
+          <li>Iron fallout remover</li>
+          <li>Interior vacuum and wipe-down</li>
+          <li>Streak-free glass, inside and out</li>
+        </ul>
+        <button class="book" type="button" data-book="wash">Book Wash</button>
+      </article>
+      <article class="tier feat">
+        <div class="top-row mono"><span>Most booked</span><span>1 day</span></div>
+        <h3>Enhance</h3>
+        <div class="price" data-price="enhance">$390</div>
+        <p>One polishing stage that takes out most of the wash marks.</p>
+        <ul>
+          <li>Everything in Wash</li>
+          <li>Clay bar decontamination</li>
+          <li>One-stage polish, about 60–70% of swirls</li>
+          <li>12-month paint sealant</li>
+          <li>Trim and tyres dressed</li>
+        </ul>
+        <button class="book" type="button" data-book="enhance">Book Enhance</button>
+      </article>
+      <article class="tier">
+        <div class="top-row mono"><span>Showroom +</span><span>2–3 days</span></div>
+        <h3>Ceramic</h3>
+        <div class="price" data-price="ceramic">$1,290</div>
+        <p>Full correction and a coating that keeps it looking like this for years.</p>
+        <ul>
+          <li>Everything in Enhance</li>
+          <li>Two-stage polish, about 90%+ of defects</li>
+          <li>Paint readings on every panel</li>
+          <li>5-year 9H ceramic, 2 layers</li>
+          <li>Wheels and glass coated</li>
+        </ul>
+        <button class="book" type="button" data-book="ceramic">Book Ceramic</button>
+      </article>
+    </div>
+    <div class="addons">
+      <div>
+        <h3>Add-ons</h3>
+        <p style="color:var(--mute-ink);margin:10px 0 0">Add any of these to a booking.</p>
+      </div>
+      <ul>
+        <li><span>Interior deep clean and steam</span><b>+$140</b></li>
+        <li><span>Headlight restoration</span><b>+$90</b></li>
+        <li><span>Engine bay detail</span><b>+$60</b></li>
+        <li><span>Pet hair removal</span><b>+$45</b></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="band faq" id="faq" aria-labelledby="faqTitle">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow mono">Good to know</p>
+      <h2 class="h2" id="faqTitle">Before you <span class="blk"><span>book.</span></span></h2>
+    </div>
+    <div>
+      <details open>
+        <summary>How long will you have my car?<i aria-hidden="true"></i></summary>
+        <p>A Wash takes about two hours, so you can wait. Enhance is a full day. Ceramic takes two to three days, because the coating needs 24 hours indoors to cure before it sees rain.</p>
+      </details>
+      <details>
+        <summary>Can you collect the car?<i aria-hidden="true"></i></summary>
+        <p>Yes. We collect and return within 15 km of the workshop for free on Enhance and Ceramic bookings. For a Wash it's a flat $25.</p>
+      </details>
+      <details>
+        <summary>Will polishing damage my paint?<i aria-hidden="true"></i></summary>
+        <p>Not the way we do it. We read every panel with a paint gauge first and use the gentlest pad and compound that removes the defect. If a panel is too thin to polish safely, we tell you and leave it.</p>
+      </details>
+      <details>
+        <summary>How do I look after a ceramic coat?<i aria-hidden="true"></i></summary>
+        <p>Wait a week before the first wash, then hand wash with a pH-neutral shampoo. Skip automatic brush washes. Come back once a year for a free coating check.</p>
+      </details>
+      <details>
+        <summary>When do I pay?<i aria-hidden="true"></i></summary>
+        <p>A 20% deposit holds your slot. You pay the rest at pick-up, after you've walked round the car with us.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="band close" aria-labelledby="closeTitle">
+  <div class="wrap">
+    <h2 class="h2" id="closeTitle">Muddy today.<br><span class="blk"><span>Glass by Friday.</span></span></h2>
+    <button class="pill" type="button" data-book style="padding:16px 22px;font-size:15px">Book a detail
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</section>
+</main>
+
+<footer class="foot mono">
+  <div class="wrap">
+    <p>Lacquer Detail Atelier</p>
+    <p>Mon–Sat · 08:00–18:00 · By appointment</p>
+    <p>Call +1 (555) 014-2290</p>
+  </div>
+</footer>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+  <div class="d-head">
+    <div>
+      <p class="eyebrow mono">Lacquer · Booking</p>
+      <h2 id="drawerTitle">Book your detail</h2>
+    </div>
+    <button class="xbtn" type="button" id="closeDrawer" aria-label="Close booking">
+      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="d-body">
+    <form id="bookForm" novalidate>
+      <fieldset>
+        <legend><span>1</span>Your car</legend>
+        <div class="seg" role="radiogroup" aria-label="Vehicle size">
+          <label><input type="radio" name="bkSize" id="bk-coupe" value="coupe" checked><span>Coupe</span></label>
+          <label><input type="radio" name="bkSize" id="bk-sedan" value="sedan"><span>Sedan</span></label>
+          <label><input type="radio" name="bkSize" id="bk-suv" value="suv"><span>SUV</span></label>
+          <label><input type="radio" name="bkSize" id="bk-truck" value="truck"><span>Truck</span></label>
+        </div>
+        <label class="field" for="bk-model">Make and model
+          <input id="bk-model" name="model" autocomplete="off" placeholder="e.g. BMW M4 Competition">
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend><span>2</span>The work</legend>
+        <label class="opt"><input type="radio" name="pkg" id="pk-wash" value="wash"><span><b>Wash</b><small>Hand wash, decon, interior wipe · 2 hrs</small></span><span class="amt" data-price="wash">$95</span></label>
+        <label class="opt"><input type="radio" name="pkg" id="pk-enhance" value="enhance" checked><span><b>Enhance</b><small>Clay, one-stage polish, sealant · 1 day</small></span><span class="amt" data-price="enhance">$390</span></label>
+        <label class="opt"><input type="radio" name="pkg" id="pk-ceramic" value="ceramic"><span><b>Ceramic</b><small>Two-stage polish, 5-yr coat · 2–3 days</small></span><span class="amt" data-price="ceramic">$1,290</span></label>
+        <div class="addgrid" role="group" aria-label="Add-ons">
+          <label class="opt"><input type="checkbox" name="add" id="ad-interior" value="interior"><span>Interior deep clean<small>+$140</small></span></label>
+          <label class="opt"><input type="checkbox" name="add" id="ad-headlights" value="headlights"><span>Headlight restore<small>+$90</small></span></label>
+          <label class="opt"><input type="checkbox" name="add" id="ad-engine" value="engine"><span>Engine bay<small>+$60</small></span></label>
+          <label class="opt"><input type="checkbox" name="add" id="ad-pet" value="pet"><span>Pet hair<small>+$45</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span>3</span>Drop-off</legend>
+        <div class="days" id="days" role="group" aria-label="Day"></div>
+        <div class="times" id="times" role="group" aria-label="Time"></div>
+        <p class="err" id="errSlot" hidden>Pick a drop-off day and time.</p>
+      </fieldset>
+      <fieldset>
+        <legend><span>4</span>Your details</legend>
+        <label class="field" for="bk-name">Name
+          <input id="bk-name" name="name" autocomplete="name" required>
+        </label>
+        <p class="err" id="errName" hidden>Add your name so we know who's coming in.</p>
+        <div class="two">
+          <label class="field" for="bk-phone">Phone
+            <input id="bk-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required>
+          </label>
+          <label class="field" for="bk-email">Email (optional)
+            <input id="bk-email" name="email" type="email" autocomplete="email">
+          </label>
+        </div>
+        <p class="err" id="errPhone" hidden>Add a phone number with at least 7 digits so we can confirm.</p>
+      </fieldset>
+      <div class="sum" id="sum" aria-live="polite"></div>
+      <button class="pill submit" type="submit" id="submitBtn">Request booking</button>
+      <p class="fine">Demo form. Requests aren't sent anywhere yet.</p>
+    </form>
+    <div class="done" id="done" hidden>
+      <p class="eyebrow mono">Request ready</p>
+      <div class="ref" id="doneRef">LQ-0000</div>
+      <p id="doneText"></p>
+      <p class="fine" style="text-align:left">Demo: on the live site this request goes to the workshop's booking inbox. Nothing was sent.</p>
+      <button class="ghost" type="button" id="again" style="justify-self:start">Start another booking</button>
+    </div>
+  </div>
+</aside>
+
+<script>
+(() => {
+'use strict';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const ss = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const io = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const lerp = (a, b, t) => a + (b - a) * t;
+const TAU = Math.PI * 2;
+
+/* Car silhouette data, measured from the photos: vertical span per column, and where the paint catches light */
+const CAR = {"cols":[null,null,null,null,null,null,null,null,null,null,null,null,[0.621,0.792],[0.587,0.8],[0.545,0.805],[0.524,0.811],[0.513,0.824],[0.503,0.826],[0.492,0.829],[0.482,0.832],[0.474,0.832],[0.466,0.829],[0.458,0.829],[0.453,0.829],[0.447,0.832],[0.442,0.832],[0.437,0.834],[0.432,0.837],[0.429,0.839],[0.374,0.842],[0.368,0.839],[0.366,0.839],[0.368,0.839],[0.374,0.839],[0.366,0.839],[0.35,0.839],[0.334,0.837],[0.321,0.837],[0.308,0.837],[0.295,0.842],[0.284,0.837],[0.274,0.837],[0.268,0.839],[0.266,0.85],[0.261,0.837],[0.258,0.832],[0.258,0.832],[0.255,0.834],[0.253,0.837],[0.25,0.842],[0.247,0.842],[0.247,0.839],[0.245,0.839],[0.245,0.837],[0.245,0.834],[0.245,0.834],[0.245,0.813],[0.245,0.816],[0.247,0.853],[0.247,0.871],[0.247,0.868],[0.25,0.863],[0.25,0.842],[0.255,0.797],[0.255,0.774],[0.258,0.768],[0.263,0.763],[0.271,0.758],[0.276,0.747],[0.284,0.745],[0.295,0.739],[0.308,0.734],[0.326,0.724],[0.347,0.716],[0.366,0.713],[0.392,0.708],[0.392,0.703],[0.395,0.639],[0.405,0.724],[0.418,0.737],[0.447,0.726],[0.532,0.6],null,null,null,null,null,null,null,null,null,null,null,null,null,null],"g4":[[0.783,0.405],[0.344,0.426],[0.293,0.439],[0.244,0.468],[0.497,0.474],[0.156,0.542],[0.314,0.558],[0.557,0.563]]};
+/* AI video clips, exported as WebP frame sequences */
+const CLIPS = {"a":{"n":61},"b":{"n":61},"c":{"n":59},"e":{"n":61},"d":{"n":73}};
+
+/* split headline letters for the reveal */
+document.querySelectorAll('.hl .l1, .hl .blk > span').forEach((line, n) => {
+  let i = line.closest('.l2') ? 5 : 0;
+  const words = line.textContent.trim().split(/\s+/);
+  line.textContent = '';
+  words.forEach((word, wi) => {
+    const w = document.createElement('span'); w.className = 'w';
+    for (const ch of word) { const c = document.createElement('span'); c.className = 'c'; c.textContent = ch; c.style.setProperty('--i', i++); w.appendChild(c); }
+    line.appendChild(w);
+    if (wi < words.length - 1) line.appendChild(document.createTextNode(' '));
+  });
+});
+
+/* ---------- stage ---------- */
+const story = document.getElementById('story');
+const wrap = document.getElementById('stageWrap');
+const cv = document.getElementById('stage');
+const ctx = cv.getContext('2d');
+const chaps = [...document.querySelectorAll('.chap')];
+const chipStep = document.getElementById('chipStep'), chipName = document.getElementById('chipName');
+const hint = document.getElementById('hint'), bar = document.getElementById('bar');
+const STEPS = [['Step 1', 'Wash'], ['Step 2', 'Inspect'], ['Step 3', 'Polish + ceramic'], ['Ready', 'Pick-up']];
+const RANGES = [[0, .2], [.2, .47], [.47, .73], [.73, 1.01]];
+
+const img = {};
+const loadImg = (k, src) => new Promise(res => { const i = new Image(); i.onload = () => { img[k] = i; res(); }; i.onerror = res; i.src = src; });
+const loaded = Promise.all([loadImg('clean', 'assets/clean.jpg'), loadImg('dirty', 'assets/dirty.jpg'), loadImg('mask', 'assets/mask_full.png')]);
+
+let W = 0, H = 0, DPR = 1, dirty = true;
+const off = document.createElement('canvas'), octx = off.getContext('2d');
+const portrait = () => W / H < .9;
+function resize() {
+  const r = wrap.getBoundingClientRect(); W = r.width; H = r.height;
+  /* full sharpness on phones; cap the pixel count on very large monitors so drawing stays fast */
+  /* phones: full 3x sharpness. Desktop: only as sharp as the 1920px frames can fill, beyond that is wasted work */
+  DPR = Math.min(window.devicePixelRatio || 1, portrait() ? 3 : Math.max(1, 2200 / W));
+  wrap.classList.toggle('band', portrait());
+  maskKey = '';
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  off.width = cv.width; off.height = cv.height; octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  dirty = true;
+}
+
+/* ---------- scroll timeline ---------- */
+const TL = { a: [.205, .36], b: [.36, .47], c: [.47, .6], e: [.615, .72], d: [.745, .93] };
+const WASH = [.02, .18], TO_A = [.185, .205], C_TO_E = [.6, .615], E_TO_D = [.72, .745];
+const u = k => clamp((sp - TL[k][0]) / (TL[k][1] - TL[k][0]));
+
+/* ---------- framing ----------
+   Desktop and landscape: the shot fills the screen.
+   Portrait phones: the 16:9 shot sits in a band across the screen, wide enough to show the whole car,
+   over a blurred copy of itself. The band widens for the paint close-ups and narrows again on the pull-back. */
+const K_WIDE = 1.3, K_CLOSE = 2.05, BAND_Y = .38;
+function bandK() {
+  if (sp < TL.b[0]) return K_WIDE;
+  if (sp < TL.c[0]) return lerp(K_WIDE, K_CLOSE, io(ss(.25, 1, u('b'))));
+  if (sp < TL.d[0]) return K_CLOSE;
+  return lerp(K_CLOSE, K_WIDE, io(clamp(u('d') / .8)));
+}
+function frameRect(iw, ih) {
+  if (!portrait()) {
+    const s = Math.max(W / iw, H / ih), dw = iw * s, dh = ih * s;
+    return { dx: (W - dw) / 2, dy: (H - dh) / 2, dw, dh };
+  }
+  const dw = W * bandK(), dh = dw * ih / iw;
+  return { dx: (W - dw) / 2, dy: H * BAND_Y - dh / 2, dw, dh };
+}
+const at = (pl, ix, iy) => [pl.dx + ix * pl.dw, pl.dy + iy * pl.dh];
+const draw = (im, pl, a = 1) => { if (!im || a <= 0) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(im, pl.dx, pl.dy, pl.dw, pl.dh); ctx.globalAlpha = 1; };
+
+/* portrait phones: a blurred copy of the shot fills the screen behind the band.
+   The copy is a 40x23 canvas the browser stretches, and the band's soft top and bottom edges are a CSS mask,
+   so neither costs a full-screen redraw. */
+const bdC = document.getElementById('bd'), bctx = bdC.getContext('2d');
+let bdImg = null, maskKey = '';
+function backdrop(im) {
+  if (!portrait() || !im || im === bdImg) return;
+  bdImg = im; bctx.drawImage(im, 0, 0, 40, 23);
+}
+function bandMask(pl) {
+  let key = 'none';
+  if (portrait()) {
+    const f = Math.round(Math.min(110, pl.dh * .24)), top = Math.round(pl.dy), bot = Math.round(pl.dy + pl.dh);
+    key = `linear-gradient(to bottom, transparent ${top}px, #000 ${top + f}px, #000 ${bot - f}px, transparent ${bot}px)`;
+  }
+  if (key === maskKey) return;
+  maskKey = key;
+  cv.style.webkitMaskImage = key; cv.style.maskImage = key;
+}
+
+/* ---------- frame sequences ----------
+   Frames load around wherever the reader is: the current clip and the next one first,
+   coarse to fine (every 8th frame, then every 4th...), then the rest. */
+const seq = {}, busy = new Set(), decoded = new Set();
+for (const k of Object.keys(CLIPS)) seq[k] = new Array(CLIPS[k].n).fill(null);
+const ORDER = ['a', 'b', 'c', 'e', 'd'];
+function clipAt(p) {
+  if (p < TL.b[0]) return 'a';
+  if (p < TL.c[0]) return 'b';
+  if (p < C_TO_E[1]) return 'c';
+  if (p < E_TO_D[1]) return 'e';
+  return 'd';
+}
+function* wanted() {
+  const ci = ORDER.indexOf(clipAt(sp));
+  const near = [ORDER[ci], ORDER[ci + 1]].filter(Boolean);
+  const rest = ORDER.filter(k => !near.includes(k));
+  for (const k of near) for (const step of [8, 4, 2, 1]) for (let i = 0; i < CLIPS[k].n; i += step) yield [k, i];
+  for (const step of [8, 4, 2, 1]) for (const k of rest) for (let i = 0; i < CLIPS[k].n; i += step) yield [k, i];
+}
+function pump() {
+  if (busy.size >= 6) return;
+  for (const [k, i] of wanted()) {
+    if (seq[k][i] || busy.has(k + i)) continue;
+    busy.add(k + i);
+    const im = new Image();
+    im.decoding = 'async';
+    im.onload = () => { seq[k][i] = im; busy.delete(k + i); dirty = true; pump(); };
+    im.onerror = () => { busy.delete(k + i); setTimeout(pump, 800); };
+    im.src = `frames/${k}/${String(i + 1).padStart(3, '0')}.webp`;
+    if (busy.size >= 6) return;
+  }
+}
+function nearest(k, i) {
+  const s = seq[k];
+  for (let d = 0; d < s.length; d++) { if (s[i - d]) return s[i - d]; if (s[i + d]) return s[i + d]; }
+  return null;
+}
+/* decode the next few frames ahead of time so drawing them never stalls */
+function warm(k, i) {
+  for (const j of [i + 1, i + 2, i + 3, i - 1]) {
+    const im = seq[k][j], key = k + j;
+    if (im && !decoded.has(key) && im.decode) { decoded.add(key); im.decode().catch(() => {}); }
+  }
+}
+/* the exact frame for progress v (no blending, so moving shots never double up) */
+function frameOf(k, v) {
+  const n = CLIPS[k].n, i = Math.round(clamp(v) * (n - 1));
+  const im = nearest(k, i);
+  if (im) warm(k, i);
+  return im;
+}
+
+/* paint an effect that only lands on the car: draw into off, cut by the car mask at pl, add to the frame */
+function onCar(pl, paint, mode = 'lighter', alpha = 1) {
+  if (!img.mask) return;
+  octx.globalCompositeOperation = 'source-over'; octx.clearRect(0, 0, W, H);
+  paint(octx);
+  octx.globalCompositeOperation = 'destination-in';
+  octx.drawImage(img.mask, pl.dx, pl.dy, pl.dw, pl.dh);
+  octx.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.globalCompositeOperation = mode; ctx.globalAlpha = alpha;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(off, 0, 0); ctx.restore();
+}
+function carSpan(sx, pl) {
+  const ix = (sx - pl.dx) / pl.dw, c = CAR.cols[Math.floor(ix * CAR.cols.length)];
+  return c ? [pl.dy + c[0] * pl.dh, pl.dy + c[1] * pl.dh] : null;
+}
+
+/* water: spray off the jet and droplets left on the paint */
+const parts = [];
+function spawn(X, pl, n) {
+  const span = carSpan(X, pl); if (!span) return;
+  const [y0, y1] = span;
+  for (let i = 0; i < n; i++) {
+    const y = lerp(y0, y1, Math.random());
+    if (Math.random() < .28) parts.push({ x: X - 4 - Math.random() * 40, y, vx: 0, vy: 6 + Math.random() * 14, r: .7 + Math.random() * 2.2, life: 0, max: 1.6 + Math.random() * 1.6, k: 2 });
+    else parts.push({ x: X + (Math.random() - .5) * 6, y, vx: (Math.random() < .7 ? 1 : -1) * (30 + Math.random() * 230), vy: -40 - Math.random() * 170, r: .5 + Math.random() * 2.2, life: 0, max: .25 + Math.random() * .55, k: Math.random() < .2 ? 1 : 0, y1 });
+  }
+  if (parts.length > 1200) parts.splice(0, parts.length - 1200);
+}
+function stepParts(dt) {
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const q = parts[i]; q.life += dt;
+    if (q.life > q.max) { parts.splice(i, 1); continue; }
+    q.x += q.vx * dt; q.y += q.vy * dt;
+    if (q.k !== 2) { q.vy += 640 * dt; if (q.y > q.y1) { parts.splice(i, 1); continue; } }
+    const a = 1 - q.life / q.max;
+    if (q.k === 2) {
+      ctx.fillStyle = `rgba(255,255,255,${.7 * a})`; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, TAU); ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${.25 * a})`; ctx.beginPath(); ctx.arc(q.x, q.y, q.r * 2.4, 0, TAU); ctx.fill();
+    } else if (q.k === 1) {
+      ctx.strokeStyle = `rgba(230,246,255,${.55 * a})`; ctx.lineWidth = .8; ctx.beginPath(); ctx.arc(q.x, q.y, q.r * 2.2, 0, TAU); ctx.stroke();
+    } else {
+      ctx.fillStyle = `rgba(236,248,255,${.9 * a})`; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, TAU); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+const edgeX = (X, y, t) => X + Math.sin(y * .012 + t * 3) * 6 + Math.sin(y * .05 - t * 8) * 3;
+function drawJet(X, t, pl) {
+  const span = carSpan(X, pl);
+  const mid = span ? (span[0] + span[1]) / 2 : H * .6, half = span ? (span[1] - span[0]) / 2 + H * .08 : H * .3;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const [w, a] of [[50, .05], [20, .12], [7, .36], [2.2, .95]]) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, `rgba(228,244,255,${a * .25})`);
+    g.addColorStop(clamp((mid - half) / H), `rgba(228,244,255,${a})`);
+    g.addColorStop(clamp((mid + half) / H), `rgba(228,244,255,${a})`);
+    g.addColorStop(1, `rgba(228,244,255,${a * .25})`);
+    ctx.beginPath();
+    for (let y = -10; y <= H + 10; y += 9) { const x = edgeX(X, y, t) + (w < 3 ? (Math.random() - .5) * 2.5 : 0); y < 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.strokeStyle = g; ctx.lineWidth = w; ctx.stroke();
+  }
+  for (let i = 0; i < 26; i++) {
+    const y = mid + (Math.random() * 2 - 1) * half * 1.1, x = edgeX(X, y, t) + (Math.random() - .5) * 10, r = .6 + Math.random() * 2.4;
+    ctx.fillStyle = `rgba(255,255,255,${.4 + Math.random() * .5})`; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+}
+function glint(x, y, s, a) {
+  if (a <= .01) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, s);
+  g.addColorStop(0, 'rgba(255,250,242,.9)'); g.addColorStop(.2, 'rgba(255,238,220,.25)'); g.addColorStop(1, 'rgba(255,220,200,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - s, y - s, s * 2, s * 2);
+  ctx.fillStyle = 'rgba(255,252,246,.85)';
+  ctx.beginPath(); ctx.ellipse(x, y, s * 1.5, s * .035, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x, y, s * .035, s * 1, 0, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- frame ---------- */
+let sp = 0, lastT = performance.now(), lastSp = 0, active = -1, visible = true, ready = false;
+function progress() { const r = story.getBoundingClientRect(), total = story.offsetHeight - wrap.offsetHeight; return total > 0 ? clamp(-r.top / total) : 0; }
+
+/* 1 · wash: the dirty plate stays right of the water line, the clean car shows left of it */
+function washFx(pl, t, dt) {
+  const w = io(clamp((sp - WASH[0]) / (WASH[1] - WASH[0]))), X = lerp(-50, W + 50, w);
+  if (X >= W + 30) return;
+  ctx.save();
+  if (portrait()) { ctx.beginPath(); ctx.rect(0, pl.dy, W, pl.dh); ctx.clip(); }
+  ctx.beginPath(); ctx.moveTo(W + 20, -20);
+  for (let y = -20; y <= H + 20; y += 9) ctx.lineTo(edgeX(X, y, t), y);
+  ctx.lineTo(W + 20, H + 20); ctx.closePath();
+  ctx.save(); ctx.clip(); draw(img.dirty, pl); ctx.restore();
+  if (X > -40) {
+    onCar(pl, g => {
+      const gr = g.createLinearGradient(X - 260, 0, X, 0);
+      gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(225,240,255,.2)');
+      g.fillStyle = gr; g.fillRect(X - 260, 0, 260, H);
+    });
+    drawJet(X, t, pl);
+    if (!reduce) spawn(X, pl, Math.round((110 + Math.min(Math.abs(sp - lastSp) / Math.max(dt, .001) * 5000, 500)) * dt));
+  }
+  ctx.restore();
+}
+
+/* pick the shot for this scroll position, plus anything dissolving in over it */
+function pick() {
+  let base, over = null, overA = 0;
+  if (sp < TL.a[0]) {
+    base = img.clean;
+    if (sp > TO_A[0]) { over = frameOf('a', 0); overA = ss(TO_A[0], TO_A[1], sp); }     /* headlights fade on */
+  } else if (sp < TL.b[0]) base = frameOf('a', u('a'));                                /* 2 · drives forward */
+  else if (sp < TL.c[0]) base = frameOf('b', u('b'));                                  /*     dives into the paint */
+  else if (sp < C_TO_E[1]) {                                                           /* 3 · gel wipe */
+    base = frameOf('c', u('c'));
+    if (sp > C_TO_E[0]) { over = frameOf('e', 0); overA = ss(C_TO_E[0], C_TO_E[1], sp); }
+  } else if (sp < E_TO_D[1]) {                                                         /*     the drop */
+    base = frameOf('e', u('e'));
+    if (sp > E_TO_D[0]) { over = frameOf('d', 0); overA = ss(E_TO_D[0], E_TO_D[1], sp); }
+  } else base = frameOf('d', u('d'));                                                  /* 4 · pull back, door opens */
+  if (!base) base = img.clean;
+  return { base, over, overA };
+}
+/* identity of what's on screen: if it hasn't changed, there's nothing to redraw */
+let shown = '';
+const sceneKey = ({ base, over, overA }) => (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + (portrait() ? bandK().toFixed(4) : '');
+
+function render(t, dt, sel) {
+  ctx.clearRect(0, 0, W, H);
+  if (!ready) return;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  const { base, over, overA } = sel;
+  const pl = frameRect(base.naturalWidth, base.naturalHeight);
+  backdrop(overA > .5 ? over : base);
+  draw(base, pl);
+  if (sp < TL.a[0]) washFx(pl, t, dt);
+  if (parts.length) { ctx.save(); if (portrait()) { ctx.beginPath(); ctx.rect(0, pl.dy, W, pl.dh); ctx.clip(); } stepParts(dt); ctx.restore(); }
+  if (over && overA > 0) draw(over, frameRect(over.naturalWidth, over.naturalHeight), overA);
+
+  /* a few glints on the paint once the door is open */
+  const fin = ss(.9, .97, sp);
+  if (fin > 0 && base !== img.clean) for (let i = 0; i < CAR.g4.length; i++) {
+    const [ix, iy] = CAR.g4[i], tw = .5 + .5 * Math.sin(t * 2.2 + i * 1.7), [x, y] = at(pl, ix, iy);
+    glint(x, y, Math.min(pl.dw, H) * (.018 + .014 * tw), fin * (.2 + .6 * tw));
+  }
+  bandMask(pl);
+}
+
+const dockable = () => matchMedia('(min-width: 861px) and (min-height: 621px)').matches;
+function updateUI() {
+  let idx = RANGES.findIndex(([a, b]) => sp >= a && sp < b); if (idx < 0) idx = 3;
+  if (idx !== active) {
+    active = idx;
+    chaps.forEach((c, i) => c.classList.toggle('on', i === idx));
+    chipStep.textContent = STEPS[idx][0]; chipName.textContent = STEPS[idx][1];
+  }
+  bar.style.setProperty('--p', sp.toFixed(4));
+  hint.style.opacity = sp > .02 ? 0 : 1;
+  wrap.classList.toggle('docked', sp > .93 && dockable());
+}
+/* only repaint when something changed: scroll moved, a frame arrived, or an effect is animating */
+const animating = () => (sp > WASH[0] && sp < WASH[1] + .02) || parts.length > 0 || sp > .88;
+function frame(now) {
+  const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+  const target = progress();
+  sp = reduce ? target : sp + (target - sp) * Math.min(1, dt * 10);
+  if (Math.abs(target - sp) < .00005) sp = target;
+  if (ready) pump();      /* frames start downloading once the opening shot is on screen */
+  if (visible && ready) {
+    const sel = pick(), key = sceneKey(sel);
+    if (dirty || key !== shown || animating()) { render(now / 1000, dt, sel); shown = key; dirty = false; }
+  }
+  if (visible) updateUI();
+  lastSp = sp;
+  requestAnimationFrame(frame);
+}
+new IntersectionObserver(([e]) => { visible = e.isIntersecting; dirty = true; }, { rootMargin: '100px' }).observe(wrap);
+addEventListener('resize', resize);
+resize();
+loaded.then(() => { ready = true; dirty = true; cv.classList.add('ready'); });
+requestAnimationFrame(frame);
+
+const topBar = document.querySelector('.top');
+const solidHeader = () => topBar.classList.toggle('solid', story.getBoundingClientRect().bottom < 70);
+addEventListener('scroll', solidHeader, { passive: true }); solidHeader();
+
+/* ---------- pricing ---------- */
+const BASE = { wash: 95, enhance: 389, ceramic: 1290 };
+const MULT = { coupe: 1, sedan: 1.1, suv: 1.25, truck: 1.35 };
+const NAMES = { wash: 'Wash', enhance: 'Enhance', ceramic: 'Ceramic' };
+const TIME = { wash: '2 hrs', enhance: '1 day', ceramic: '2–3 days' };
+const ADD = { interior: ['Interior deep clean', 140], headlights: ['Headlight restore', 90], engine: ['Engine bay', 60], pet: ['Pet hair', 45] };
+const money = n => '$' + n.toLocaleString('en-US');
+const priceOf = (pkg, size) => Math.round(BASE[pkg] * MULT[size] / 5) * 5;
+const state = { size: 'coupe', pkg: 'enhance', day: null, time: null };
+
+function setSize(size) {
+  state.size = size;
+  document.querySelectorAll(`input[name$="Size"][value="${size}"]`).forEach(i => i.checked = true);
+  document.querySelectorAll('[data-price]').forEach(el => el.textContent = money(priceOf(el.dataset.price, size)));
+  renderSum();
+}
+function setPkg(pkg) {
+  state.pkg = pkg;
+  document.querySelectorAll(`input[name="pkg"][value="${pkg}"], input[name="dockPkg"][value="${pkg}"]`).forEach(i => i.checked = true);
+  renderSum();
+}
+document.querySelectorAll('input[name$="Size"]').forEach(i => i.addEventListener('change', () => setSize(i.value)));
+document.querySelectorAll('input[name="pkg"], input[name="dockPkg"]').forEach(i => i.addEventListener('change', () => setPkg(i.value)));
+document.querySelectorAll('input[name="add"]').forEach(i => i.addEventListener('change', renderSum));
+
+const daysEl = document.getElementById('days'), timesEl = document.getElementById('times');
+const SLOTS = ['08:00', '10:30', '13:00', '15:30'];
+const days = [];
+for (let d = new Date(), n = 0; days.length < 12 && n < 20; n++) { d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1); if (d.getDay() !== 0) days.push(d); }
+const full = (d, s) => ((d.getDate() * 7 + s * 3 + d.getMonth()) % 5) === 0;
+days.forEach((d, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chipbtn'; b.id = 'day-' + i; b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = `<small>${d.toLocaleDateString('en-GB', { weekday: 'short' })}</small><b>${d.getDate()}</b><small>${d.toLocaleDateString('en-GB', { month: 'short' })}</small>`;
+  b.addEventListener('click', () => { state.day = i; state.time = null; drawSlots(); renderSum(); });
+  daysEl.appendChild(b);
+});
+function drawSlots() {
+  [...daysEl.children].forEach((b, i) => b.setAttribute('aria-pressed', String(i === state.day)));
+  timesEl.innerHTML = '';
+  SLOTS.forEach((s, si) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chipbtn'; b.id = 'slot-' + si; b.textContent = s;
+    const isFull = state.day !== null && full(days[state.day], si);
+    b.disabled = state.day === null || isFull;
+    if (isFull) b.setAttribute('aria-label', s + ', full');
+    b.setAttribute('aria-pressed', String(state.time === si));
+    b.addEventListener('click', () => { state.time = si; drawSlots(); renderSum(); });
+    timesEl.appendChild(b);
+  });
+}
+drawSlots();
+
+const sumEl = document.getElementById('sum'), submitBtn = document.getElementById('submitBtn'), dockTotal = document.getElementById('dockTotal');
+function totals() {
+  const pkg = priceOf(state.pkg, state.size);
+  const adds = [...document.querySelectorAll('input[name="add"]:checked')].map(i => ADD[i.value]);
+  const total = pkg + adds.reduce((s, a) => s + a[1], 0);
+  return { pkg, adds, total, deposit: Math.round(total * .2) };
+}
+function renderSum() {
+  const t = totals(), sizeName = { coupe: 'Coupe', sedan: 'Sedan', suv: 'SUV', truck: 'Truck' }[state.size];
+  let h = `<div><span>${NAMES[state.pkg]} · ${sizeName}</span><span>${money(t.pkg)}</span></div>`;
+  t.adds.forEach(a => h += `<div class="muted"><span>${a[0]}</span><span>+${money(a[1])}</span></div>`);
+  if (state.day !== null && state.time !== null) h += `<div class="muted"><span>Drop-off</span><span>${days[state.day].toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}, ${SLOTS[state.time]}</span></div>`;
+  h += `<div class="muted"><span>Time with us</span><span>${TIME[state.pkg]}</span></div>`;
+  h += `<div class="total"><span>Total</span><span>${money(t.total)}</span></div>`;
+  h += `<div class="muted"><span>Deposit to hold the slot (20%)</span><span>${money(t.deposit)}</span></div>`;
+  sumEl.innerHTML = h;
+  submitBtn.textContent = `Request booking · ${money(t.total)}`;
+  dockTotal.textContent = money(priceOf(state.pkg, state.size));
+}
+
+/* ---------- drawer ---------- */
+const drawer = document.getElementById('drawer'), scrim = document.getElementById('scrim');
+const form = document.getElementById('bookForm'), done = document.getElementById('done');
+let lastFocus = null;
+function openDrawer(pkg) {
+  if (pkg && BASE[pkg]) setPkg(pkg);
+  renderSum();
+  lastFocus = document.activeElement;
+  scrim.hidden = false; requestAnimationFrame(() => scrim.classList.add('on'));
+  drawer.classList.add('on'); drawer.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('locked');
+  setTimeout(() => document.getElementById('closeDrawer').focus(), 60);
+}
+function closeDrawer() {
+  scrim.classList.remove('on'); setTimeout(() => { if (!scrim.classList.contains('on')) scrim.hidden = true; }, 360);
+  drawer.classList.remove('on'); drawer.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('locked');
+  if (lastFocus) lastFocus.focus({ preventScroll: true });
+}
+document.querySelectorAll('[data-book]').forEach(b => b.addEventListener('click', () => openDrawer(b.dataset.book)));
+document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+scrim.addEventListener('click', closeDrawer);
+addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('on')) closeDrawer(); });
+
+function showErr(id, on, input) { document.getElementById(id).hidden = !on; if (input) input.setAttribute('aria-invalid', String(on)); }
+/* clear each error as soon as it's fixed, instead of waiting for the next submit */
+document.getElementById('bk-name').addEventListener('input', e => { if (e.target.value.trim()) showErr('errName', false, e.target); });
+document.getElementById('bk-phone').addEventListener('input', e => { if ((e.target.value.match(/\d/g) || []).length >= 7) showErr('errPhone', false, e.target); });
+timesEl.addEventListener('click', () => { if (state.day !== null && state.time !== null) showErr('errSlot', false); });
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('bk-name'), phone = document.getElementById('bk-phone');
+  const slotBad = state.day === null || state.time === null, nameBad = !name.value.trim(), phoneBad = (phone.value.match(/\d/g) || []).length < 7;
+  showErr('errSlot', slotBad); showErr('errName', nameBad, name); showErr('errPhone', phoneBad, phone);
+  if (slotBad) { daysEl.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' }); return; }
+  if (nameBad) { name.focus(); return; }
+  if (phoneBad) { phone.focus(); return; }
+  const t = totals(), d = days[state.day], model = document.getElementById('bk-model').value.trim() || 'your car';
+  document.getElementById('doneRef').textContent = 'LQ-' + String(1000 + Math.floor(Math.random() * 9000));
+  document.getElementById('doneText').textContent = `${NAMES[state.pkg]} for ${model}, drop-off ${d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at ${SLOTS[state.time]}. Total ${money(t.total)}, with a ${money(t.deposit)} deposit to hold the slot.`;
+  form.hidden = true; done.hidden = false;
+});
+document.getElementById('again').addEventListener('click', () => {
+  form.reset(); state.day = null; state.time = null;
+  setSize(state.size); setPkg('enhance'); drawSlots(); done.hidden = true; form.hidden = false;
+});
+setSize('coupe');
+})();
+</script>
+</body>
+</html>
