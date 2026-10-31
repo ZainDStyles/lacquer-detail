@@ -714,7 +714,7 @@ const u = k => clamp((sp - TL[k][0]) / (TL[k][1] - TL[k][0]));
    so effects and sparkles can be placed on the car and the camera can move between the two framings. */
 const WBOX = { x: .20139, y: .11905, w: .59312, h: .79241 }; /* desktop opening: the exact original photo, set into clean_wide / dirty_wide */
 const PBOX = { x: .0026, y: .3728, w: .9975, h: .3148 };   /* phone opening, inside p_clean / p_dirty */
-const PEBOX = { x: .0026, y: .4237, w: .9975, h: .3148 };  /* phone ending, inside the last pull-back frame */
+const PEBOX = PBOX;                                         /* phone ending: it lands back on the opening framing */
 const innerOf = (pl, box = WBOX) => ({ dx: pl.dx + box.x * pl.dw, dy: pl.dy + box.y * pl.dh, dw: box.w * pl.dw, dh: box.h * pl.dh });
 /* k = 0 shows the whole wide image, k = 1 shows just the box, filling the screen */
 function zoomRect(im, box, k) {
