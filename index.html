@@ -687,8 +687,8 @@ const loaded = Promise.all([
   loadImg('clean', PHONE ? 'assets/p_clean.jpg' : 'assets/clean.jpg'),
   loadImg('dirty', PHONE ? 'assets/p_dirty.jpg' : 'assets/dirty.jpg'),
   loadImg('mask', 'assets/mask_full.png')]);
-/* desktop: the opening and closing shots with more workshop around them, so the car sits further away */
-if (!PHONE) { loadImg('cleanW', 'assets/clean_wide.jpg'); loadImg('dirtyW', 'assets/dirty_wide.jpg'); loadImg('endW', 'assets/end_wide.jpg'); }
+/* desktop: the opening shot with more workshop around it, so the car starts further away */
+if (!PHONE) { loadImg('cleanW', 'assets/clean_wide.jpg'); loadImg('dirtyW', 'assets/dirty_wide.jpg'); }
 
 let W = 0, H = 0, DPR = 1, dirty = true;
 const off = document.createElement('canvas'), octx = off.getContext('2d');
@@ -706,14 +706,13 @@ function resize() {
 
 /* ---------- scroll timeline ---------- */
 const TL = { a: [.205, .36], b: [.36, .47], c: [.47, .6], e: [.615, .72], d: [.745, .93] };
-const WASH = [.02, .18], PUSH = [.14, .19], OUT = [.93, .975], TO_A = [.19, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
+const WASH = [.02, .18], PUSH = [.14, .19], TO_A = [.19, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
 const u = k => clamp((sp - TL[k][0]) / (TL[k][1] - TL[k][0]));
 
 /* ---------- framing ----------
    Every shot fills the screen. Boxes say where the original shot sits inside a wider or taller one (measured),
    so effects and sparkles can be placed on the car and the camera can move between the two framings. */
-const WBOX = { x: .1995, y: .1190, w: .5961, h: .7945 };   /* desktop opening, inside clean_wide / dirty_wide */
-const EBOX = { x: .1888, y: .0893, w: .5872, h: .7826 };   /* desktop ending, inside end_wide */
+const WBOX = { x: .20139, y: .11905, w: .59312, h: .79241 }; /* desktop opening: the exact original photo, set into clean_wide / dirty_wide */
 const PBOX = { x: .0026, y: .3728, w: .9975, h: .3148 };   /* phone opening, inside p_clean / p_dirty */
 const PEBOX = { x: .0026, y: .4237, w: .9975, h: .3148 };  /* phone ending, inside the last pull-back frame */
 const innerOf = (pl, box = WBOX) => ({ dx: pl.dx + box.x * pl.dw, dy: pl.dy + box.y * pl.dh, dw: box.w * pl.dw, dh: box.h * pl.dh });
@@ -915,7 +914,7 @@ function pick() {
 }
 /* identity of what's on screen: if it hasn't changed, there's nothing to redraw */
 let shown = '';
-const sceneKey = ({ base, over, overA, dip }) => (sp < TL.a[0] || sp > OUT[0] ? sp.toFixed(4) : '') + (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3);
+const sceneKey = ({ base, over, overA, dip }) => (sp < TL.a[0] ? sp.toFixed(4) : '') + (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3);
 
 function render(t, dt, sel) {
   ctx.clearRect(0, 0, W, H);
@@ -933,13 +932,7 @@ function render(t, dt, sel) {
   draw(still, pl);
   if (sp < TL.a[0]) washFx(carPl, t, dt, pl, dirtyImg);
   if (parts.length) stepParts(dt);
-  /* desktop ending: keep pulling back from the door shot until the whole workshop is in view */
-  let glintPl = PHONE ? innerOf(pl, PEBOX) : pl;
-  if (!PHONE && img.endW && sp > OUT[0]) {
-    const epl = zoomRect(img.endW, EBOX, 1 - io(clamp((sp - OUT[0]) / (OUT[1] - OUT[0]))));
-    draw(img.endW, epl, ss(OUT[0], OUT[0] + .01, sp));
-    glintPl = innerOf(epl, EBOX);
-  }
+    const glintPl = PHONE ? innerOf(pl, PEBOX) : pl;
   if (over && overA > 0) draw(over, frameRect(over.naturalWidth, over.naturalHeight), overA);
   if (dip > 0) { ctx.fillStyle = `rgba(12,13,15,${dip})`; ctx.fillRect(0, 0, W, H); }
 
