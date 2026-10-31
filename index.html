@@ -682,6 +682,8 @@ const RANGES = [[0, .2], [.2, .47], [.47, .73], [.73, 1.01]];
 const img = {};
 const loadImg = (k, src) => new Promise(res => { const i = new Image(); i.onload = () => { img[k] = i; res(); }; i.onerror = res; i.src = src; });
 const loaded = Promise.all([loadImg('clean', 'assets/clean.jpg'), loadImg('dirty', 'assets/dirty.jpg'), loadImg('mask', 'assets/mask_full.png')]);
+/* desktop opening: the same shot with more workshop around it, so the car starts further away */
+loadImg('cleanW', 'assets/clean_wide.jpg'); loadImg('dirtyW', 'assets/dirty_wide.jpg');
 
 let W = 0, H = 0, DPR = 1, dirty = true;
 const off = document.createElement('canvas'), octx = off.getContext('2d');
@@ -701,7 +703,7 @@ function resize() {
 
 /* ---------- scroll timeline ---------- */
 const TL = { a: [.205, .36], b: [.36, .47], c: [.47, .6], e: [.615, .72], d: [.745, .93] };
-const WASH = [.02, .18], TO_A = [.185, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
+const WASH = [.02, .18], PUSH = [.14, .19], TO_A = [.19, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
 const u = k => clamp((sp - TL[k][0]) / (TL[k][1] - TL[k][0]));
 
 /* ---------- framing ----------
@@ -715,6 +717,18 @@ function bandK() {
   if (sp < TL.d[0]) return K_CLOSE;
   return lerp(K_CLOSE, K_WIDE, io(clamp(u('d') / .8)));
 }
+/* where the original shot sits inside the wide one (measured), and the push-in from wide to the original framing */
+const WBOX = { x: .1995, y: .1190, w: .5961, h: .7945 };
+function wideRect() {
+  const im = img.cleanW, iw = im.naturalWidth, ih = im.naturalHeight;
+  const s0 = Math.max(W / iw, H / ih), s1 = Math.max(W / (WBOX.w * iw), H / (WBOX.h * ih));
+  const z = io(clamp((sp - PUSH[0]) / (PUSH[1] - PUSH[0])));
+  const s = Math.exp(lerp(Math.log(s0), Math.log(s1), z));
+  const cx = lerp(WBOX.x + WBOX.w / 2, WBOX.x + WBOX.w / 2, z), cy = lerp(.5, WBOX.y + WBOX.h / 2, z);
+  const dw = iw * s, dh = ih * s;
+  return { dx: Math.min(0, Math.max(W - dw, W / 2 - cx * dw)), dy: Math.min(0, Math.max(H - dh, H / 2 - cy * dh)), dw, dh };
+}
+const innerOf = pl => ({ dx: pl.dx + WBOX.x * pl.dw, dy: pl.dy + WBOX.y * pl.dh, dw: WBOX.w * pl.dw, dh: WBOX.h * pl.dh });
 function frameRect(iw, ih) {
   if (!portrait()) {
     const s = Math.max(W / iw, H / ih), dw = iw * s, dh = ih * s;
@@ -887,15 +901,15 @@ let sp = 0, lastT = performance.now(), lastSp = 0, active = -1, visible = true, 
 function progress() { const r = story.getBoundingClientRect(), total = story.offsetHeight - wrap.offsetHeight; return total > 0 ? clamp(-r.top / total) : 0; }
 
 /* 1 · wash: the dirty plate stays right of the water line, the clean car shows left of it */
-function washFx(pl, t, dt) {
+function washFx(pl, t, dt, full = pl, dirtyImg = img.dirty) {
   const w = io(clamp((sp - WASH[0]) / (WASH[1] - WASH[0]))), X = lerp(-50, W + 50, w);
   if (X >= W + 30) return;
   ctx.save();
-  if (portrait()) { ctx.beginPath(); ctx.rect(0, pl.dy, W, pl.dh); ctx.clip(); }
+  if (portrait()) { ctx.beginPath(); ctx.rect(0, full.dy, W, full.dh); ctx.clip(); }
   ctx.beginPath(); ctx.moveTo(W + 20, -20);
   for (let y = -20; y <= H + 20; y += 9) ctx.lineTo(edgeX(X, y, t), y);
   ctx.lineTo(W + 20, H + 20); ctx.closePath();
-  ctx.save(); ctx.clip(); draw(img.dirty, pl); ctx.restore();
+  ctx.save(); ctx.clip(); draw(dirtyImg, full); ctx.restore();
   if (X > -40) {
     onCar(pl, g => {
       const gr = g.createLinearGradient(X - 260, 0, X, 0);
@@ -929,17 +943,19 @@ function pick() {
 }
 /* identity of what's on screen: if it hasn't changed, there's nothing to redraw */
 let shown = '';
-const sceneKey = ({ base, over, overA, dip }) => (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3) + '|' + (portrait() ? bandK().toFixed(4) : '');
+const sceneKey = ({ base, over, overA, dip }) => (sp < TL.a[0] ? sp.toFixed(4) : '') + (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3) + '|' + (portrait() ? bandK().toFixed(4) : '');
 
 function render(t, dt, sel) {
   ctx.clearRect(0, 0, W, H);
   if (!ready) return;
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   const { base, over, overA, dip } = sel;
-  const pl = frameRect(base.naturalWidth, base.naturalHeight);
+  let pl = frameRect(base.naturalWidth, base.naturalHeight), carPl = pl;
+  const wide = sp < TL.a[0] && !portrait() && img.cleanW && img.dirtyW;
+  if (wide) { pl = wideRect(); carPl = innerOf(pl); }
   backdrop(overA > .5 ? over : base);
-  draw(base, pl);
-  if (sp < TL.a[0]) washFx(pl, t, dt);
+  draw(wide ? img.cleanW : base, pl);
+  if (sp < TL.a[0]) washFx(carPl, t, dt, pl, wide ? img.dirtyW : img.dirty);
   if (parts.length) { ctx.save(); if (portrait()) { ctx.beginPath(); ctx.rect(0, pl.dy, W, pl.dh); ctx.clip(); } stepParts(dt); ctx.restore(); }
   if (over && overA > 0) draw(over, frameRect(over.naturalWidth, over.naturalHeight), overA);
   if (dip > 0) { ctx.fillStyle = `rgba(12,13,15,${dip})`; ctx.fillRect(0, 0, W, H); }
