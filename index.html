@@ -69,6 +69,8 @@ button{font:inherit;color:inherit}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--ink)}
 #stage{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1s ease}
 #stage.ready{opacity:1}
+#bd{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;filter:brightness(.4) saturate(1.15);transform:scale(1.12)}
+.stage.band #bd{display:block}
 .shade{position:absolute;inset:0;pointer-events:none;
   background:
    linear-gradient(to bottom,rgba(12,13,15,.55) 0%,rgba(12,13,15,0) 18%),
@@ -328,6 +330,7 @@ legend span{display:grid;place-items:center;width:20px;height:20px;border-radius
 <main>
 <section class="story" id="story" aria-label="What happens to your car">
   <div class="stage" id="stageWrap">
+    <canvas id="bd" width="40" height="23" aria-hidden="true"></canvas>
     <canvas id="stage" aria-hidden="true"></canvas>
     <div class="shade" aria-hidden="true"></div>
 
@@ -688,6 +691,8 @@ function resize() {
   /* full sharpness on phones; cap the pixel count on very large monitors so drawing stays fast */
   /* phones: full 3x sharpness. Desktop: only as sharp as the 1920px frames can fill, beyond that is wasted work */
   DPR = Math.min(window.devicePixelRatio || 1, portrait() ? 3 : Math.max(1, 2200 / W));
+  wrap.classList.toggle('band', portrait());
+  maskKey = '';
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   off.width = cv.width; off.height = cv.height; octx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -700,29 +705,46 @@ const WASH = [.02, .18], TO_A = [.185, .205], C_TO_E = [.6, .615], E_TO_D = [.72
 const u = k => clamp((sp - TL[k][0]) / (TL[k][1] - TL[k][0]));
 
 /* ---------- framing ----------
-   Every shot fills the screen. On a phone only about a quarter of the 16:9 frame fits across,
-   so each clip has a focus point (horizontal, 0..1) that keeps the best part of the car in view,
-   moving with the shot: grille and headlight, the paint swirl, the water drop, the open door. */
-const FOCUS = {
-  still: [[0, .33]],
-  a: [[0, .33], [1, .45]],
-  b: [[0, .43], [.6, .5], [1, .5]],
-  c: [[0, .5], [1, .48]],
-  e: [[0, .48]],
-  d: [[0, .47], [.5, .45], [1, .36]],
-};
-function focusOf(k, v) {
-  const f = FOCUS[k];
-  for (let i = 1; i < f.length; i++) if (v <= f[i][0]) return lerp(f[i - 1][1], f[i][1], io((v - f[i - 1][0]) / (f[i][0] - f[i - 1][0])));
-  return f[f.length - 1][1];
+   Desktop and landscape: the shot fills the screen.
+   Portrait phones: the 16:9 shot sits in a band across the screen, wide enough to show the whole car,
+   over a blurred copy of itself. The band widens for the paint close-ups and narrows again on the pull-back. */
+const K_WIDE = 1, K_CLOSE = 1.6, BAND_Y = .36;
+function bandK() {
+  if (sp < TL.b[0]) return K_WIDE;
+  if (sp < TL.c[0]) return lerp(K_WIDE, K_CLOSE, io(ss(.25, 1, u('b'))));
+  if (sp < TL.d[0]) return K_CLOSE;
+  return lerp(K_CLOSE, K_WIDE, io(clamp(u('d') / .8)));
 }
-function frameRect(iw, ih, fx = .5) {
-  const s = Math.max(W / iw, H / ih), dw = iw * s, dh = ih * s;
-  const dx = Math.min(0, Math.max(W - dw, W / 2 - fx * dw));
-  return { dx, dy: (H - dh) / 2, dw, dh };
+function frameRect(iw, ih) {
+  if (!portrait()) {
+    const s = Math.max(W / iw, H / ih), dw = iw * s, dh = ih * s;
+    return { dx: (W - dw) / 2, dy: (H - dh) / 2, dw, dh };
+  }
+  const dw = W * bandK(), dh = dw * ih / iw;
+  return { dx: (W - dw) / 2, dy: H * BAND_Y - dh / 2, dw, dh };
 }
 const at = (pl, ix, iy) => [pl.dx + ix * pl.dw, pl.dy + iy * pl.dh];
 const draw = (im, pl, a = 1) => { if (!im || a <= 0) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(im, pl.dx, pl.dy, pl.dw, pl.dh); ctx.globalAlpha = 1; };
+
+/* portrait phones: a blurred copy of the shot fills the screen behind the band.
+   The copy is a 40x23 canvas the browser stretches, and the band's soft top and bottom edges are a CSS mask,
+   so neither costs a full-screen redraw. */
+const bdC = document.getElementById('bd'), bctx = bdC.getContext('2d');
+let bdImg = null, maskKey = '';
+function backdrop(im) {
+  if (!portrait() || !im || im === bdImg) return;
+  bdImg = im; bctx.drawImage(im, 0, 0, 40, 23);
+}
+function bandMask(pl) {
+  let key = 'none';
+  if (portrait()) {
+    const f = Math.round(Math.min(60, pl.dh * .12)), top = Math.round(pl.dy), bot = Math.round(pl.dy + pl.dh);
+    key = `linear-gradient(to bottom, transparent ${top}px, #000 ${top + f}px, #000 ${bot - f}px, transparent ${bot}px)`;
+  }
+  if (key === maskKey) return;
+  maskKey = key;
+  cv.style.webkitMaskImage = key; cv.style.maskImage = key;
+}
 
 /* ---------- frame sequences ----------
    Frames load around wherever the reader is: the current clip and the next one first,
@@ -888,37 +910,38 @@ function washFx(pl, t, dt) {
 
 /* pick the shot for this scroll position, plus anything dissolving in over it */
 function pick() {
-  let base, over = null, overA = 0, dip = 0, fx = .5, ofx = .5;
+  let base, over = null, overA = 0, dip = 0;
   if (sp < TL.a[0]) {
-    base = img.clean; fx = focusOf('still', 0);
-    if (sp > TO_A[0]) { over = frameOf('a', 0); ofx = focusOf('a', 0); overA = ss(TO_A[0], TO_A[1], sp); }     /* headlights fade on */
-  } else if (sp < TL.b[0]) { base = frameOf('a', u('a')); fx = focusOf('a', u('a')); }                                /* 2 · drives forward */
-  else if (sp < TL.c[0]) { base = frameOf('b', u('b')); fx = focusOf('b', u('b')); }                                  /*     dives into the paint */
+    base = img.clean;
+    if (sp > TO_A[0]) { over = frameOf('a', 0); overA = ss(TO_A[0], TO_A[1], sp); }     /* headlights fade on */
+  } else if (sp < TL.b[0]) base = frameOf('a', u('a'));                                /* 2 · drives forward */
+  else if (sp < TL.c[0]) base = frameOf('b', u('b'));                                  /*     dives into the paint */
   else if (sp < C_TO_E[1]) {                                                           /* 3 · gel wipe */
-    base = frameOf('c', u('c')); fx = focusOf('c', u('c'));
-    if (sp > C_TO_E[0]) { over = frameOf('e', 0); ofx = focusOf('e', 0); overA = ss(C_TO_E[0], C_TO_E[1], sp); }
+    base = frameOf('c', u('c'));
+    if (sp > C_TO_E[0]) { over = frameOf('e', 0); overA = ss(C_TO_E[0], C_TO_E[1], sp); }
   } else if (sp < E_TO_D[1]) {                                                         /*     the drop */
     const m = (E_TO_D[0] + E_TO_D[1]) / 2;
-    if (sp < m) { base = frameOf('e', u('e')); fx = focusOf('e', u('e')); if (sp > E_TO_D[0]) dip = ss(E_TO_D[0], m, sp); }
-    else { base = frameOf('d', 0); fx = focusOf('d', 0); dip = 1 - ss(m, E_TO_D[1], sp); }
-  } else { base = frameOf('d', u('d')); fx = focusOf('d', u('d')); }                                                  /* 4 · pull back, door opens */
-  if (!base) { base = img.clean; fx = focusOf('still', 0); }
-  return { base, over, overA, dip, fx, ofx };
+    if (sp < m) { base = frameOf('e', u('e')); if (sp > E_TO_D[0]) dip = ss(E_TO_D[0], m, sp); }
+    else { base = frameOf('d', 0); dip = 1 - ss(m, E_TO_D[1], sp); }
+  } else base = frameOf('d', u('d'));                                                  /* 4 · pull back, door opens */
+  if (!base) base = img.clean;
+  return { base, over, overA, dip };
 }
 /* identity of what's on screen: if it hasn't changed, there's nothing to redraw */
 let shown = '';
-const sceneKey = ({ base, over, overA, dip, fx }) => (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3) + '|' + fx.toFixed(4);
+const sceneKey = ({ base, over, overA, dip }) => (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3) + '|' + (portrait() ? bandK().toFixed(4) : '');
 
 function render(t, dt, sel) {
   ctx.clearRect(0, 0, W, H);
   if (!ready) return;
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  const { base, over, overA, dip, fx, ofx } = sel;
-  const pl = frameRect(base.naturalWidth, base.naturalHeight, fx);
+  const { base, over, overA, dip } = sel;
+  const pl = frameRect(base.naturalWidth, base.naturalHeight);
+  backdrop(overA > .5 ? over : base);
   draw(base, pl);
   if (sp < TL.a[0]) washFx(pl, t, dt);
   if (parts.length) { ctx.save(); if (portrait()) { ctx.beginPath(); ctx.rect(0, pl.dy, W, pl.dh); ctx.clip(); } stepParts(dt); ctx.restore(); }
-  if (over && overA > 0) draw(over, frameRect(over.naturalWidth, over.naturalHeight, ofx), overA);
+  if (over && overA > 0) draw(over, frameRect(over.naturalWidth, over.naturalHeight), overA);
   if (dip > 0) { ctx.fillStyle = `rgba(12,13,15,${dip})`; ctx.fillRect(0, 0, W, H); }
 
   /* a few glints on the paint once the door is open */
@@ -927,6 +950,7 @@ function render(t, dt, sel) {
     const [ix, iy] = CAR.g4[i], tw = .5 + .5 * Math.sin(t * 2.2 + i * 1.7), [x, y] = at(pl, ix, iy);
     glint(x, y, Math.min(pl.dw, H) * (.018 + .014 * tw), fin * (.2 + .6 * tw));
   }
+  bandMask(pl);
 }
 
 const dockable = () => matchMedia('(min-width: 861px) and (min-height: 621px)').matches;
