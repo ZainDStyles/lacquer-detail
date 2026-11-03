@@ -688,7 +688,7 @@ const loaded = Promise.all([
   loadImg('dirty', PHONE ? 'assets/p_dirty.jpg' : 'assets/dirty.jpg'),
   loadImg('mask', 'assets/mask_full.png')]);
 /* desktop: the opening shot with more workshop around it, so the car starts further away */
-if (!PHONE) { loadImg('cleanW', 'assets/clean_wide.jpg'); loadImg('dirtyW', 'assets/dirty_wide.jpg'); }
+if (!PHONE) { loadImg('cleanW', 'assets/clean_wide.jpg'); loadImg('dirtyW', 'assets/dirty_wide.jpg'); loadImg('endW', 'assets/end_wide.jpg'); }
 
 let W = 0, H = 0, DPR = 1, dirty = true;
 const off = document.createElement('canvas'), octx = off.getContext('2d');
@@ -705,14 +705,19 @@ function resize() {
 }
 
 /* ---------- scroll timeline ---------- */
-const TL = { a: [.205, .36], b: [.36, .47], c: [.47, .6], e: [.615, .72], d: [.745, .93] };
-const WASH = [.02, .18], PUSH = [.14, .19], TO_A = [.19, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
+/* Desktop keeps the camera wide while the car drives in (CLOSE: then it moves in for the details)
+   and, after the pull-back clip, keeps going back to the whole workshop (OUT). Phones have no such moves. */
+const TL = PHONE
+  ? { a: [.205, .36], b: [.36, .47], c: [.47, .6], e: [.615, .72], d: [.745, .93] }
+  : { a: [.205, .34], b: [.385, .47], c: [.47, .6], e: [.615, .72], d: [.745, .9] };
+const CLOSE = [.34, .385], OUT = [.9, .955];
+const WASH = [.02, .18], TO_A = [.19, .205], C_TO_E = [.6, .615], E_TO_D = [.722, .745];
 const u = k => clamp((sp - TL[k][0]) / (TL[k][1] - TL[k][0]));
 
 /* ---------- framing ----------
    Every shot fills the screen. Boxes say where the original shot sits inside a wider or taller one (measured),
    so effects and sparkles can be placed on the car and the camera can move between the two framings. */
-const WBOX = { x: .20139, y: .11905, w: .59312, h: .79241 }; /* desktop opening: the exact original photo, set into clean_wide / dirty_wide */
+const WBOX = { x: .20139, y: .11905, w: .59312, h: .79241 }; /* desktop: where the clip's frame sits inside every wide image (clean_wide, dirty_wide, end_wide, frames/aw) */
 const PBOX = { x: .0026, y: .3728, w: .9975, h: .3148 };   /* phone opening, inside p_clean / p_dirty */
 const PEBOX = PBOX;                                         /* phone ending: it lands back on the opening framing */
 const innerOf = (pl, box = WBOX) => ({ dx: pl.dx + box.x * pl.dw, dy: pl.dy + box.y * pl.dh, dw: box.w * pl.dw, dh: box.h * pl.dh });
@@ -761,7 +766,7 @@ function pump() {
     im.decoding = 'async';
     im.onload = () => { seq[k][i] = im; busy.delete(k + i); dirty = true; pump(); };
     im.onerror = () => { busy.delete(k + i); setTimeout(pump, 800); };
-    im.src = `frames/${PHONE ? 'm/' : ''}${k}/${String(i + 1).padStart(3, '0')}.webp`;
+    im.src = `frames/${PHONE ? 'm/' + k : k === 'a' ? 'aw' : k}/${String(i + 1).padStart(3, '0')}.webp`;  /* desktop drive frames are pre-set into the wide room */
     if (busy.size >= 6) return;
   }
 }
@@ -895,11 +900,12 @@ function washFx(pl, t, dt, full = pl, dirtyImg = img.dirty) {
 
 /* pick the shot for this scroll position, plus anything dissolving in over it */
 function pick() {
-  let base, over = null, overA = 0, dip = 0;
+  let base, over = null, overA = 0, dip = 0, wk = -1;   /* wk >= 0: draw base as a wide image, zoomed by wk */
   if (sp < TL.a[0]) {
     base = img.clean;
     if (sp > TO_A[0]) { over = frameOf('a', 0); overA = ss(TO_A[0], TO_A[1], sp); }     /* headlights fade on */
-  } else if (sp < TL.b[0]) base = frameOf('a', u('a'));                                /* 2 · drives forward */
+  } else if (sp < TL.a[1]) { base = frameOf('a', u('a')); if (!PHONE) wk = 0; }        /* 2 · drives forward */
+  else if (sp < TL.b[0]) { base = frameOf('a', 1); wk = io(clamp((sp - CLOSE[0]) / (CLOSE[1] - CLOSE[0]))); }  /* camera moves in */
   else if (sp < TL.c[0]) base = frameOf('b', u('b'));                                  /*     dives into the paint */
   else if (sp < C_TO_E[1]) {                                                           /* 3 · gel wipe */
     base = frameOf('c', u('c'));
@@ -908,32 +914,32 @@ function pick() {
     const m = (E_TO_D[0] + E_TO_D[1]) / 2;
     if (sp < m) { base = frameOf('e', u('e')); if (sp > E_TO_D[0]) dip = ss(E_TO_D[0], m, sp); }
     else { base = frameOf('d', 0); dip = 1 - ss(m, E_TO_D[1], sp); }
-  } else base = frameOf('d', u('d'));                                                  /* 4 · pull back, door opens */
+  } else if (sp < TL.d[1] || PHONE || !img.endW) base = frameOf('d', u('d'));         /* 4 · pull back, door opens */
+  else { base = img.endW; wk = 1 - io(clamp((sp - OUT[0]) / (OUT[1] - OUT[0]))); }      /*     and keep going back */
   if (!base) base = img.clean;
-  return { base, over, overA, dip };
+  return { base, over, overA, dip, wk };
 }
 /* identity of what's on screen: if it hasn't changed, there's nothing to redraw */
 let shown = '';
-const sceneKey = ({ base, over, overA, dip }) => (sp < TL.a[0] ? sp.toFixed(4) : '') + (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3);
+const sceneKey = ({ base, over, overA, dip, wk }) => (sp < TL.a[0] ? sp.toFixed(4) : '') + wk.toFixed(4) + '|' + (base && base.src) + '|' + (over && over.src) + '|' + overA.toFixed(3) + '|' + dip.toFixed(3);
 
 function render(t, dt, sel) {
   ctx.clearRect(0, 0, W, H);
   if (!ready) return;
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  const { base, over, overA, dip } = sel;
-  let pl = frameRect(base.naturalWidth, base.naturalHeight), carPl = pl, still = base, dirtyImg = img.dirty;
+  const { base, over, overA, dip, wk } = sel;
+  let pl = wk >= 0 ? zoomRect(base, WBOX, wk) : frameRect(base.naturalWidth, base.naturalHeight), carPl = pl, still = base, dirtyImg = img.dirty;
   if (sp < TL.a[0]) {
     if (PHONE) carPl = innerOf(pl, PBOX);
-    else if (img.cleanW && img.dirtyW) {          /* start wide, push in to the drive clip's framing */
-      pl = zoomRect(img.cleanW, WBOX, io(clamp((sp - PUSH[0]) / (PUSH[1] - PUSH[0]))));
-      carPl = innerOf(pl); still = img.cleanW; dirtyImg = img.dirtyW;
+    else if (img.cleanW && img.dirtyW) {          /* the wash happens in the wide view; the camera doesn't move */
+      pl = zoomRect(img.cleanW, WBOX, 0); carPl = innerOf(pl); still = img.cleanW; dirtyImg = img.dirtyW;
     }
   }
   draw(still, pl);
   if (sp < TL.a[0]) washFx(carPl, t, dt, pl, dirtyImg);
   if (parts.length) stepParts(dt);
-    const glintPl = PHONE ? innerOf(pl, PEBOX) : pl;
-  if (over && overA > 0) draw(over, frameRect(over.naturalWidth, over.naturalHeight), overA);
+  const glintPl = PHONE ? innerOf(pl, PEBOX) : wk >= 0 ? innerOf(pl) : pl;
+  if (over && overA > 0) draw(over, PHONE ? frameRect(over.naturalWidth, over.naturalHeight) : zoomRect(over, WBOX, 0), overA);
   if (dip > 0) { ctx.fillStyle = `rgba(12,13,15,${dip})`; ctx.fillRect(0, 0, W, H); }
 
   /* a few glints on the paint once the door is open */
@@ -954,7 +960,7 @@ function updateUI() {
   }
   bar.style.setProperty('--p', sp.toFixed(4));
   hint.style.opacity = sp > .02 ? 0 : 1;
-  wrap.classList.toggle('docked', sp > .93 && dockable());
+  wrap.classList.toggle('docked', sp > .95 && dockable());
 }
 /* only repaint when something changed: scroll moved, a frame arrived, or an effect is animating */
 const animating = () => (sp > WASH[0] && sp < WASH[1] + .02) || parts.length > 0 || sp > .88;
