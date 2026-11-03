@@ -960,7 +960,7 @@ function updateUI() {
   }
   bar.style.setProperty('--p', sp.toFixed(4));
   hint.style.opacity = sp > .02 ? 0 : 1;
-  wrap.classList.toggle('docked', sp > .95 && dockable());
+  wrap.classList.toggle('docked', sp > (PHONE ? .93 : .95) && dockable());
 }
 /* only repaint when something changed: scroll moved, a frame arrived, or an effect is animating */
 const animating = () => (sp > WASH[0] && sp < WASH[1] + .02) || parts.length > 0 || sp > .88;
