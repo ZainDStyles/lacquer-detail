@@ -9,8 +9,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="preload" as="image" href="assets/dirty.jpg">
-<link rel="preload" as="image" href="assets/clean.jpg">
+<!-- Each screen preloads only its own opening photos (same test as PHONE in the script: width/height < 0.9 is a phone) -->
+<link rel="preload" as="image" href="assets/dirty.jpg" media="(min-aspect-ratio: 9/10)">
+<link rel="preload" as="image" href="assets/clean.jpg" media="(min-aspect-ratio: 9/10)">
+<link rel="preload" as="image" href="assets/p_dirty.jpg" media="(max-aspect-ratio: 9/10)">
+<link rel="preload" as="image" href="assets/p_clean.jpg" media="(max-aspect-ratio: 9/10)">
 <style>
 /* Layout: a pinned full-screen workshop stage the story scrolls through (wash, inspect, correct, pick-up), then the menu on light paper, then a dark close. */
 :root{
