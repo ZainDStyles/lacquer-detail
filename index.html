@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HALO Motorworks</title>
+<meta name="description" content="Performance tuning studio. Exhaust, brakes, wheels and dyno-proven Stage tunes.">
+<meta name="theme-color" content="#07090B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,700;1,800;1,900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090B;
+  --panel: #0E1216;
+  --panel-2: #141A1F;
+  --ink: #EEF2F5;
+  --muted: #8C99A5;
+  --line: rgba(238, 242, 245, .12);
+  --accent: #22D3EE;        /* HALO cyan */
+  --accent-ink: #67E8F9;
+  --on-accent: #031317;
+  --orange: #FF7A1A;        /* the car */
+  --head: 'Barlow Condensed', Impact, sans-serif;
+  --sans: 'Barlow', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden; }
+body.locked { overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* ---------- header ---------- */
+.top {
+  position: fixed; inset: 0 0 auto 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: max(14px, env(safe-area-inset-top)) clamp(16px, 3.4vw, 44px) 14px;
+  background: linear-gradient(rgba(7,9,11,.8), rgba(7,9,11,0));
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo svg { width: 28px; height: 28px; color: var(--accent); filter: drop-shadow(0 0 6px rgba(34,211,238,.6)); }
+.logo b { font-family: var(--head); font-style: italic; font-weight: 900; font-size: 26px; letter-spacing: .06em; line-height: 1; }
+.logo small { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: .3em; color: var(--muted); margin-top: 2px; }
+.nav { display: flex; gap: 30px; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.nav a:hover { color: var(--ink); }
+.pill {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: 0;
+  background: var(--accent); color: var(--on-accent);
+  font-family: var(--head); font-weight: 800; font-size: 16px; letter-spacing: .06em; text-transform: uppercase;
+  padding: 10px 18px; border-radius: 6px; transition: transform .15s, background .15s, box-shadow .15s;
+  box-shadow: 0 0 0 0 rgba(34,211,238,0);
+}
+.pill:hover { background: var(--accent-ink); box-shadow: 0 0 24px rgba(34,211,238,.35); }
+.pill:active { transform: scale(.97); }
+.pill.ghost { background: rgba(238,242,245,.06); color: var(--ink); border: 1px solid var(--line); backdrop-filter: blur(8px); }
+.pill.ghost:hover { background: rgba(238,242,245,.12); box-shadow: none; }
+.pill svg { width: 16px; height: 16px; }
+
+/* ---------- story ---------- */
+#story { position: relative; height: 1100vh; }
+.stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #000; }
+.shade { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(0deg, rgba(7,9,11,.88) 0%, rgba(7,9,11,.35) 26%, rgba(7,9,11,0) 44%); }
+
+.loader { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; background: var(--bg); transition: opacity .6s; }
+.loader.gone { opacity: 0; pointer-events: none; }
+.loader i { width: 54px; height: 54px; border-radius: 50%; border: 2px solid rgba(34,211,238,.18); border-top-color: var(--accent); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* chapter copy */
+.chap {
+  position: absolute; z-index: 4; left: clamp(16px, 4.5vw, 64px); bottom: clamp(70px, 11vh, 120px);
+  max-width: 780px; opacity: 0; transform: translateY(18px); pointer-events: none;
+  transition: opacity .45s, transform .45s;
+}
+.chap.on { opacity: 1; transform: none; pointer-events: auto; }
+.kick { font-family: var(--mono); font-size: 11px; letter-spacing: .22em; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.kick::before { content: ''; width: 22px; height: 2px; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.big {
+  font-family: var(--head); font-style: italic; font-weight: 900; text-transform: uppercase;
+  font-size: clamp(54px, 7.6vw, 124px); line-height: .86; letter-spacing: -.005em;
+}
+.big em { font-style: italic; color: var(--accent); text-shadow: 0 0 30px rgba(34,211,238,.35); display: block; }
+.sub { margin-top: 16px; max-width: 460px; font-size: clamp(15px, 1.2vw, 17px); line-height: 1.55; color: #C9D2D9; }
+.ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.ctas .pill { font-size: 17px; padding: 13px 22px; }
+.chap.hero .big { font-size: clamp(60px, 8.6vw, 140px); }
+
+/* build sheet */
+.sheet {
+  position: absolute; z-index: 5; top: calc(max(14px, env(safe-area-inset-top)) + 70px); right: clamp(16px, 3.4vw, 44px);
+  width: 268px; padding: 14px 16px 16px; border-radius: 10px;
+  background: rgba(7,9,11,.6); border: 1px solid var(--line);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font-family: var(--mono); font-size: 11px;
+  transition: border-color .3s, box-shadow .3s;
+}
+.sheet.flash { border-color: var(--accent); box-shadow: 0 0 26px rgba(34,211,238,.28); }
+.sheet h4 { display: flex; justify-content: space-between; font-weight: 600; font-size: 10px; letter-spacing: .2em; color: var(--muted); margin-bottom: 10px; }
+.sheet h4 b { color: var(--orange); font-weight: 600; }
+.sheet .r { display: grid; grid-template-columns: 70px 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(238,242,245,.07); }
+.sheet .r span:first-child { color: var(--muted); }
+.sheet .r span:last-child { text-align: right; color: #AEB9C2; transition: color .3s; }
+.sheet .r.done span:last-child { color: var(--accent); }
+.sheet .r.done span:last-child::before { content: '✓ '; }
+.sheet .pw { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.sheet .pw small { color: var(--muted); letter-spacing: .2em; font-size: 10px; }
+.sheet .pw b { font-family: var(--head); font-style: italic; font-weight: 900; font-size: 46px; line-height: .9; color: var(--ink); }
+.sheet .pw b i { font-size: 18px; color: var(--muted); font-style: normal; margin-left: 3px; }
+.sheet .pw.up b { color: var(--accent); text-shadow: 0 0 18px rgba(34,211,238,.4); }
+.sheet .zero { display: flex; justify-content: space-between; color: var(--muted); margin-top: 6px; }
+.sheet .zero b { color: var(--ink); font-weight: 600; }
+
+/* dyno graph */
+.dyno {
+  position: absolute; z-index: 5; right: clamp(16px, 3.4vw, 44px); bottom: clamp(70px, 11vh, 120px);
+  width: 340px; padding: 12px 14px 10px; border-radius: 10px;
+  background: rgba(7,9,11,.62); border: 1px solid rgba(34,211,238,.35);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .12em;
+  opacity: 0; transform: translateY(14px); transition: opacity .4s, transform .4s;
+}
+.dyno.on { opacity: 1; transform: none; }
+.dyno .hd { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.dyno .hd b { color: var(--accent); font-weight: 600; }
+.dyno canvas { width: 100%; height: 150px; display: block; }
+.dyno .lg { display: flex; gap: 14px; margin-top: 6px; }
+.dyno .lg span::before { content: ''; display: inline-block; width: 14px; height: 2px; margin-right: 6px; vertical-align: middle; background: #5B6670; }
+.dyno .lg span:last-child::before { background: var(--accent); }
+
+/* progress */
+.prog { position: absolute; z-index: 5; left: clamp(16px, 4.5vw, 64px); right: clamp(16px, 4.5vw, 64px); bottom: 26px; display: flex; gap: 6px; }
+.prog i { flex: 1; height: 2px; background: rgba(238,242,245,.14); position: relative; overflow: hidden; }
+.prog i b { position: absolute; inset: 0; background: var(--accent); transform-origin: left; transform: scaleX(0); box-shadow: 0 0 8px var(--accent); }
+.cue { position: absolute; z-index: 5; left: 50%; bottom: 44px; transform: translateX(-50%); font-family: var(--mono); font-size: 10px; letter-spacing: .3em; color: var(--muted); transition: opacity .4s; white-space: nowrap; }
+
+/* ---------- after the story ---------- */
+.sec { padding: clamp(64px, 10vw, 120px) clamp(16px, 4.5vw, 64px); border-top: 1px solid var(--line); }
+.sec h2 { font-family: var(--head); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: clamp(44px, 6vw, 88px); line-height: .9; }
+.sec h2 em { color: var(--accent); font-style: italic; }
+.sec .lead { color: var(--muted); max-width: 520px; margin-top: 14px; line-height: 1.6; }
+.stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 24px; background: var(--panel); display: flex; flex-direction: column; gap: 14px; }
+.card.hot { border-color: var(--accent); box-shadow: 0 0 40px rgba(34,211,238,.08) inset; }
+.card small { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; color: var(--accent); }
+.card h3 { font-family: var(--head); font-style: italic; font-weight: 900; font-size: 44px; text-transform: uppercase; line-height: .9; }
+.card .hp { font-family: var(--head); font-weight: 800; font-size: 26px; color: var(--ink); }
+.card .hp span { color: var(--muted); font-size: 16px; font-weight: 600; }
+.card ul { list-style: none; display: grid; gap: 8px; color: #C9D2D9; font-size: 14.5px; }
+.card li::before { content: '—  '; color: var(--accent); }
+.card .price { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--line); }
+.card .price b { font-family: var(--head); font-weight: 800; font-size: 28px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 40px; }
+.stat { border-top: 2px solid var(--accent); padding-top: 14px; }
+.stat b { display: block; font-family: var(--head); font-style: italic; font-weight: 900; font-size: 54px; line-height: 1; }
+.stat span { color: var(--muted); font-size: 14px; }
+footer { padding: 40px clamp(16px, 4.5vw, 64px) 60px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; color: var(--muted); font-size: 13px; }
+
+/* ---------- configurator drawer ---------- */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.6); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; z-index: 50; top: 0; right: 0; bottom: 0; width: min(470px, 100%);
+  background: var(--panel); border-left: 1px solid var(--line);
+  transform: translateX(100%); transition: transform .4s cubic-bezier(.2,.8,.2,1);
+  display: flex; flex-direction: column;
+}
+.drawer.on { transform: none; }
+.dhead { display: flex; justify-content: space-between; align-items: flex-start; padding: max(18px, env(safe-area-inset-top)) 22px 14px; border-bottom: 1px solid var(--line); }
+.dhead small { font-family: var(--mono); font-size: 10px; letter-spacing: .22em; color: var(--accent); }
+.dhead h2 { font-family: var(--head); font-style: italic; font-weight: 900; font-size: 38px; text-transform: uppercase; line-height: .95; margin-top: 4px; }
+.x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; flex: none; }
+.x svg { width: 18px; height: 18px; }
+.meter { padding: 14px 22px; border-bottom: 1px solid var(--line); background: var(--panel-2); display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 6px 12px; }
+.meter small { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--muted); }
+.meter b { font-family: var(--head); font-style: italic; font-weight: 900; font-size: 44px; line-height: .9; color: var(--accent); }
+.meter b i { font-style: normal; font-size: 16px; color: var(--muted); margin-left: 4px; }
+.meter .gain { font-family: var(--mono); font-size: 12px; color: var(--accent-ink); text-align: right; }
+.meter .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: rgba(238,242,245,.08); overflow: hidden; }
+.meter .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--orange), var(--accent)); transition: width .4s; }
+.dbody { flex: 1; overflow-y: auto; padding: 0 22px 24px; overscroll-behavior: contain; }
+.step { padding-top: 20px; }
+.lbl { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.opts { display: grid; gap: 8px; }
+.opt {
+  display: grid; grid-template-columns: 20px 1fr auto; gap: 12px; align-items: center; cursor: pointer;
+  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); transition: border-color .15s, background .15s;
+}
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.opt .box { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #3D4852; display: grid; place-items: center; }
+.opt.chk .box { border-radius: 5px; }
+.opt .box::after { content: ''; width: 8px; height: 8px; border-radius: inherit; background: var(--accent); transform: scale(0); transition: transform .15s; }
+.opt:has(input:checked) { border-color: var(--accent); background: rgba(34,211,238,.06); }
+.opt:has(input:checked) .box { border-color: var(--accent); }
+.opt:has(input:checked) .box::after { transform: scale(1); }
+.opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.opt b { display: block; font-size: 15px; font-weight: 600; }
+.opt em { display: block; font-style: normal; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.opt .pr { text-align: right; font-family: var(--mono); font-size: 12.5px; }
+.opt .pr small { display: block; color: var(--accent-ink); font-size: 11px; }
+.field { width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); outline: none; font-size: 15px; }
+.field:focus { border-color: var(--accent); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.days { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.day { padding: 10px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; text-align: center; }
+.day small { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--muted); letter-spacing: .1em; }
+.day b { font-size: 18px; }
+.day[aria-pressed="true"] { border-color: var(--accent); background: rgba(34,211,238,.1); }
+.times { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.chip { padding: 9px 0; border-radius: 8px; border: 1px solid var(--line); background: transparent; font-family: var(--mono); font-size: 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: rgba(34,211,238,.12); color: var(--accent-ink); }
+.chip:disabled { opacity: .28; cursor: not-allowed; text-decoration: line-through; }
+.err { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: rgba(34,211,238,.08); color: var(--accent-ink); font-size: 13px; }
+.dfoot { border-top: 1px solid var(--line); padding: 14px 22px max(14px, env(safe-area-inset-bottom)); background: var(--panel); }
+.sum { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.sum span { font-size: 12px; color: var(--muted); }
+.sum b { font-family: var(--head); font-weight: 800; font-size: 32px; line-height: 1; }
+.dfoot .pill { width: 100%; justify-content: center; padding: 14px; font-size: 18px; }
+.fine { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+.done { padding: 40px 22px; text-align: center; }
+.done .ok { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 18px; display: grid; place-items: center; background: rgba(34,211,238,.12); color: var(--accent); }
+.done .ok svg { width: 30px; height: 30px; }
+.done h3 { font-family: var(--head); font-style: italic; font-size: 46px; font-weight: 900; text-transform: uppercase; }
+.done p { color: #C9D2D9; margin-top: 10px; line-height: 1.55; }
+.done code { display: inline-block; margin-top: 16px; font-family: var(--mono); padding: 8px 12px; border: 1px dashed var(--accent); border-radius: 6px; color: var(--accent-ink); }
+
+/* ---------- phone ---------- */
+@media (max-aspect-ratio: 9/10) {
+  .nav { display: none; }
+  .top .pill { padding: 9px 13px; font-size: 14px; }
+  .shade { background:
+    linear-gradient(180deg, rgba(7,9,11,.7) 0%, rgba(7,9,11,0) 22%),
+    linear-gradient(0deg, rgba(7,9,11,.94) 0%, rgba(7,9,11,.5) 30%, rgba(7,9,11,0) 48%); }
+  .chap { left: 16px; right: 16px; bottom: 64px; }
+  .big { font-size: clamp(46px, 13.5vw, 72px); }
+  .chap.hero .big { font-size: clamp(50px, 15vw, 80px); }
+  .sub { font-size: 14.5px; }
+  .ctas .pill { flex: 1; justify-content: center; font-size: 16px; padding: 13px 10px; }
+  .sheet { top: calc(max(14px, env(safe-area-inset-top)) + 60px); right: 16px; left: auto; width: 156px; padding: 10px 12px; }
+  .sheet h4 { margin-bottom: 4px; } .sheet h4 b { display: none; }
+  .sheet .r { grid-template-columns: 1fr auto; padding: 4px 0; font-size: 10px; }
+  .sheet .r span:last-child { font-size: 0; }
+  .sheet .r span:last-child::after { content: '—'; font-size: 10px; color: #55606A; }
+  .sheet .r.done span:last-child::before { font-size: 11px; content: '✓'; }
+  .sheet .r.done span:last-child::after { content: ''; }
+  .sheet .pw { margin-top: 6px; padding-top: 6px; }
+  .sheet .pw b { font-size: 34px; }
+  .sheet .zero { display: none; }
+  .dyno { left: 16px; right: 16px; width: auto; bottom: auto; top: calc(max(14px, env(safe-area-inset-top)) + 60px); right: 186px; padding: 8px 10px; }
+  .dyno canvas { height: 92px; }
+  .dyno .lg { display: none; }
+  .cue { display: none; }
+  .stages, .stats { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .chap, .dyno { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="#" aria-label="HALO Motorworks home">
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="12.5" stroke="currentColor" stroke-width="3"/><circle cx="16" cy="16" r="5" stroke="currentColor" stroke-width="2" opacity=".55"/></svg>
+    <span><b>HALO</b><small>MOTORWORKS</small></span>
+  </a>
+  <nav class="nav" aria-label="Main"><a href="#story">Builds</a><a href="#stages">Stages</a><a href="#stages">Dyno</a><a href="#contact">Contact</a></nav>
+  <button class="pill" data-build>Build your stage</button>
+</header>
+
+<main>
+  <section id="story" aria-label="A stock GT-R becomes a Stage 2 build">
+    <div class="stage">
+      <canvas id="scene" aria-hidden="true"></canvas>
+      <div class="shade"></div>
+      <div class="loader" id="loader"><i></i></div>
+
+      <div class="chap hero on" data-from="0" data-to=".05">
+        <p class="kick">HALO Motorworks · Performance studio</p>
+        <h1 class="big">Stock is the<em>starting line.</em></h1>
+        <p class="sub">Exhaust, brakes, wheels and tunes, all proven on our in-house dyno before you get the keys.</p>
+        <div class="ctas">
+          <button class="pill" data-build>Build your stage
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <a class="pill ghost" href="#stages">See the stages</a>
+        </div>
+      </div>
+      <div class="chap" data-from=".2" data-to=".33">
+        <p class="kick">01 · Arrival</p>
+        <h2 class="big">Bone stock.<em>565 hp.</em></h2>
+      </div>
+      <div class="chap" data-from=".39" data-to=".52">
+        <p class="kick">02 · Exhaust</p>
+        <h2 class="big">Full titanium.<em>Heat-blued.</em></h2>
+      </div>
+      <div class="chap" data-from=".57" data-to=".70">
+        <p class="kick">03 · Brakes &amp; wheels</p>
+        <h2 class="big">410 mm ceramics.<em>Forged 20s.</em></h2>
+      </div>
+      <div class="chap" data-from=".745" data-to=".86">
+        <p class="kick">04 · Tune</p>
+        <h2 class="big">Stage 2.<em id="hpBig">760 hp.</em></h2>
+      </div>
+      <div class="chap" data-from=".9" data-to="1.01">
+        <p class="kick">05 · Handover</p>
+        <h2 class="big">Built here.<em>Proven out there.</em></h2>
+        <div class="ctas">
+          <button class="pill" data-build>Build your stage
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <a class="pill ghost" href="#stages">See the stages</a>
+        </div>
+      </div>
+
+      <aside class="sheet" id="sheet" aria-label="Build sheet">
+        <h4><span>BUILD SHEET</span><b>GT-R R35</b></h4>
+        <div class="r" id="rEx"><span>Exhaust</span><span>Stock</span></div>
+        <div class="r" id="rBr"><span>Brakes</span><span>Stock</span></div>
+        <div class="r" id="rWh"><span>Wheels</span><span>Stock</span></div>
+        <div class="r" id="rTu"><span>Tune</span><span>Stock</span></div>
+        <div class="pw" id="pw"><small>POWER</small><b><span id="hp">565</span><i>hp</i></b></div>
+        <div class="zero"><span>0–60 MPH</span><b id="zs">2.9 s</b></div>
+      </aside>
+
+      <aside class="dyno" id="dyno" aria-label="Dyno graph">
+        <div class="hd"><span>DYNO · WHEEL HP</span><b id="rpm">0 RPM</b></div>
+        <canvas id="graph"></canvas>
+        <div class="lg"><span>Stock</span><span>Stage 2</span></div>
+      </aside>
+
+      <div class="cue" id="cue">SCROLL</div>
+      <div class="prog" id="prog"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+    </div>
+  </section>
+
+  <section class="sec" id="stages">
+    <h2>Pick your <em>stage.</em></h2>
+    <p class="lead">Every build is mapped live on our dyno and handed back with the printout. Fixed price, agreed before we start.</p>
+    <div class="stages">
+      <article class="card">
+        <small>STAGE 1</small><h3>Wake it up</h3><p class="hp">+80 hp <span>· ECU only</span></p>
+        <ul><li>Custom ECU map</li><li>Dyno before &amp; after</li><li>Same-day turnaround</li></ul>
+        <div class="price"><b>$1,450</b><button class="pill ghost" data-build data-stage="1">Choose</button></div>
+      </article>
+      <article class="card hot">
+        <small>STAGE 2 · MOST BOOKED</small><h3>The build</h3><p class="hp">+195 hp <span>· tune + hardware</span></p>
+        <ul><li>Downpipes &amp; intakes</li><li>Upgraded intercooler</li><li>Custom map on the dyno</li></ul>
+        <div class="price"><b>$4,900</b><button class="pill" data-build data-stage="2">Choose</button></div>
+      </article>
+      <article class="card">
+        <small>STAGE 3</small><h3>No limits</h3><p class="hp">+400 hp <span>· turbos &amp; fuel</span></p>
+        <ul><li>Upgraded turbos</li><li>Fuel system &amp; injectors</li><li>Built gearbox option</li></ul>
+        <div class="price"><b>$14,500</b><button class="pill ghost" data-build data-stage="3">Choose</button></div>
+      </article>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>1,180</b><span>cars through the dyno</span></div>
+      <div class="stat"><b>4.9</b><span>average from 640 reviews</span></div>
+      <div class="stat"><b>2 yr</b><span>warranty on every tune</span></div>
+      <div class="stat"><b>48 h</b><span>typical Stage 2 turnaround</span></div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <span>HALO Motorworks · Unit 4, Ring Road Industrial Park · Mon–Sat 8:00–19:00</span>
+    <span>Demo website</span>
+  </footer>
+</main>
+
+<!-- configurator -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="bkTitle" aria-hidden="true">
+  <div class="dhead">
+    <div><small>HALO · BUILD &amp; BOOK</small><h2 id="bkTitle">Build your stage</h2></div>
+    <button class="x" id="closeBk" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="meter" id="meter">
+    <small>ESTIMATED POWER</small><span class="gain" id="gain">+0 hp</span>
+    <b><span id="estHp">565</span><i>hp</i></b><span></span>
+    <div class="bar"><i id="estBar" style="width:40%"></i></div>
+  </div>
+
+  <div class="dbody" id="form">
+    <div class="step">
+      <span class="lbl">Your car</span>
+      <div class="two">
+        <input class="field" id="car" value="Nissan GT-R R35" aria-label="Make and model" autocomplete="off">
+        <input class="field" id="base" value="565" inputmode="numeric" aria-label="Stock horsepower" autocomplete="off">
+      </div>
+    </div>
+    <div class="step">
+      <span class="lbl">Stage</span>
+      <div class="opts" id="stageOpts"></div>
+    </div>
+    <div class="step">
+      <span class="lbl">Hardware</span>
+      <div class="opts" id="addOpts"></div>
+    </div>
+    <div class="step">
+      <span class="lbl">Dyno day</span>
+      <div class="days" id="days"></div>
+      <div class="times" id="times"></div>
+    </div>
+    <div class="step">
+      <span class="lbl">Your details</span>
+      <div class="two">
+        <input class="field" id="name" placeholder="Name" autocomplete="name" aria-label="Name">
+        <input class="field" id="phone" placeholder="Phone" type="tel" autocomplete="tel" aria-label="Phone">
+      </div>
+      <div class="err" id="err" hidden></div>
+    </div>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div>
+    <h3>Build booked</h3>
+    <p id="doneText"></p>
+    <code id="ref"></code>
+  </div>
+
+  <div class="dfoot" id="foot">
+    <div class="sum"><span>Build total</span><b id="total">$0</b></div>
+    <button class="pill" id="submit">Book the dyno day</button>
+    <p class="fine">Deposit only on the day. Fixed price confirmed after inspection.</p>
+  </div>
+</aside>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const range = (sp, a, b) => clamp((sp - a) / (b - a));
+
+  /* ================= assets ================= */
+  const SEQ = { a: 85, b: 61, c: 61 };                 // frames per clip
+  const FOCUS = { a: [.52, .6], e1: [.5, .62], e2: [.5, .62], w1: [.52, .55], w2: [.52, .55], b: [.4, .55], c: [.62, .55] };
+  const frames = { a: [], b: [], c: [] };
+  const stills = {};
+  function still(k) {
+    if (!stills[k]) { const im = new Image(); im.decoding = 'async'; im.src = `assets/${k}.jpg`; im.onload = () => (dirty = true); stills[k] = im; }
+    return stills[k];
+  }
+  function loadSeq(k, done) {
+    let left = SEQ[k];
+    for (let i = 0; i < SEQ[k]; i++) {
+      const im = new Image(); im.decoding = 'async';
+      im.onload = im.onerror = () => { dirty = true; if (--left === 0 && done) done(); };
+      im.src = `frames/${k}/${String(i + 1).padStart(3, '0')}.webp`;
+      frames[k][i] = im;
+    }
+  }
+  const ok = im => im && im.complete && im.naturalWidth > 0;
+  function frameOf(k, u) {
+    const arr = frames[k], n = arr.length; if (!n) return null;
+    let i = Math.round(clamp(u) * (n - 1));
+    for (let d = 0; d < n; d++) {               // nearest loaded frame
+      if (ok(arr[i - d])) return arr[i - d];
+      if (ok(arr[i + d])) return arr[i + d];
+    }
+    return null;
+  }
+
+  /* ================= timeline =================
+     0      hero (first frame of the drive-in)
+     .05    shutter up, car drives in      → clip a
+     .33    dip → exhaust, scan stock → titanium
+     .52    dip → front wheel, scan stock → forged + ceramics
+     .70    dip → dyno run                  → clip b  (+ live graph)
+     .865   dip → night street              → clip c                  */
+  const T = { a: [.05, .3], dip1: [.33, .37], scanE: [.42, .5], dip2: [.52, .56], scanW: [.6, .68], dip3: [.7, .74], b: [.745, .86], dip4: [.865, .895], c: [.9, .985] };
+  const CHAPTERS = [[0, .33], [.33, .52], [.52, .7], [.7, .865], [.865, 1]];
+
+  function pick(sp) {
+    // returns { base, next, scan, dip } ; base/next are {im, focus}
+    const S = (k) => ({ im: still(k), f: FOCUS[k] });
+    const F = (k, u) => ({ im: frameOf(k, u), f: FOCUS[k] });
+    if (sp < T.dip1[0]) return { base: F('a', range(sp, ...T.a)) };
+    if (sp < T.dip1[1]) { const k = range(sp, ...T.dip1); return k < .5 ? { base: F('a', 1), dip: k * 2 } : { base: S('e1'), dip: (1 - k) * 2 }; }
+    if (sp < T.dip2[0]) { const k = range(sp, ...T.scanE); return { base: S('e1'), next: S('e2'), scan: k, label: 'EXHAUST' }; }
+    if (sp < T.dip2[1]) { const k = range(sp, ...T.dip2); return k < .5 ? { base: S('e2'), dip: k * 2 } : { base: S('w1'), dip: (1 - k) * 2 }; }
+    if (sp < T.dip3[0]) { const k = range(sp, ...T.scanW); return { base: S('w1'), next: S('w2'), scan: k, label: 'BRAKES · WHEELS' }; }
+    const hasB = SEQ.b > 0, hasC = SEQ.c > 0;
+    const Bf = u => hasB ? F('b', u) : S('dyno');
+    const Cf = u => hasC ? F('c', u) : S('night');
+    if (sp < T.dip3[1]) { const k = range(sp, ...T.dip3); return k < .5 ? { base: S('w2'), dip: k * 2 } : { base: Bf(0), dip: (1 - k) * 2 }; }
+    if (sp < T.dip4[0]) return { base: Bf(range(sp, ...T.b)) };
+    if (sp < T.dip4[1]) { const k = range(sp, ...T.dip4); return k < .5 ? { base: Bf(1), dip: k * 2 } : { base: Cf(0), dip: (1 - k) * 2 }; }
+    return { base: Cf(range(sp, ...T.c) * .62) };     // stop while the car is still in sight
+  }
+
+  /* ================= drawing ================= */
+  const cv = $('scene'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1, sp = 0, dirty = true, lastKey = '';
+  function size() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    dirty = true;
+  }
+  function cover(im, f) {                      // cover-fit, keeping the focus point in view
+    const s = Math.max(W / im.naturalWidth, H / im.naturalHeight);
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    return [clamp(W / 2 - w * f[0], W - w, 0), clamp(H / 2 - h * f[1], H - h, 0), w, h];
+  }
+  function draw(o, alpha = 1) {
+    if (!o || !ok(o.im)) return false;
+    const [x, y, w, h] = cover(o.im, o.f);
+    ctx.globalAlpha = alpha; ctx.drawImage(o.im, x, y, w, h); ctx.globalAlpha = 1;
+    return true;
+  }
+  function render() {
+    const s = pick(sp);
+    const key = sp.toFixed(4) + W + 'x' + H;
+    if (!dirty && key === lastKey) return;
+    lastKey = key; dirty = false;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    if (!draw(s.base)) return;
+    if (s.next && s.scan > 0) {
+      const k = ease(s.scan), x = k * W;
+      if (k >= 1) draw(s.next);
+      else {
+        ctx.save(); ctx.beginPath(); ctx.rect(0, 0, x, H); ctx.clip(); draw(s.next); ctx.restore();
+        // the scan beam
+        const g = ctx.createLinearGradient(x - 90, 0, x + 26, 0);
+        g.addColorStop(0, 'rgba(34,211,238,0)'); g.addColorStop(.75, 'rgba(34,211,238,.16)'); g.addColorStop(.97, 'rgba(160,245,255,.9)'); g.addColorStop(1, 'rgba(34,211,238,0)');
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = g; ctx.fillRect(x - 90, 0, 116, H);
+        ctx.fillStyle = 'rgba(200,250,255,.95)'; ctx.fillRect(x - 1, 0, 2, H);
+        // fine scan lines just behind the beam
+        ctx.fillStyle = 'rgba(34,211,238,.08)';
+        for (let yy = 0; yy < H; yy += 4) ctx.fillRect(x - 60, yy, 60, 1);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.fillStyle = 'rgba(160,245,255,.95)';
+        const label = `SCANNING · ${s.label} · ${Math.round(k * 100)}%`;
+        const tw = ctx.measureText(label).width;
+        ctx.fillText(label, Math.min(x + 10, W - tw - 12), H * .3);
+      }
+    }
+    if (s.dip) { ctx.fillStyle = `rgba(0,0,0,${clamp(s.dip) * .92})`; ctx.fillRect(0, 0, W, H); }
+  }
+
+  /* ================= overlays ================= */
+  const chaps = [...document.querySelectorAll('.chap')];
+  const bars = [...document.querySelectorAll('#prog b')];
+  const hpEl = $('hp'), pwEl = $('pw'), sheet = $('sheet');
+  const rows = { rEx: ['Stock', 'Titanium'], rBr: ['Stock', '410 mm CCM'], rWh: ['Stock', 'Forged 20"'], rTu: ['Stock', 'Stage 2'] };
+  let lastDone = '';
+  function overlays() {
+    chaps.forEach(c => c.classList.toggle('on', sp >= +c.dataset.from && sp < +c.dataset.to));
+    CHAPTERS.forEach(([a, b], i) => bars[i].style.transform = `scaleX(${range(sp, a, b)})`);
+    $('cue').style.opacity = sp < .02 ? 1 : 0;
+
+    const exDone = sp > T.scanE[0] + (T.scanE[1] - T.scanE[0]) * .5;
+    const whDone = sp > T.scanW[0] + (T.scanW[1] - T.scanW[0]) * .5;
+    const dynoK = range(sp, T.b[0] + .01, T.b[1] - .015);
+    const tuDone = dynoK >= 1;
+    const done = [exDone, whDone, whDone, tuDone];
+    const sig = done.join();
+    if (sig !== lastDone) {
+      ['rEx', 'rBr', 'rWh', 'rTu'].forEach((id, i) => { const r = $(id); r.classList.toggle('done', done[i]); r.lastElementChild.textContent = rows[id][done[i] ? 1 : 0]; });
+      if (lastDone) { sheet.classList.add('flash'); setTimeout(() => sheet.classList.remove('flash'), 600); }
+      lastDone = sig;
+    }
+    const hp = Math.round(565 + (exDone ? 25 : 0) + ease(dynoK) * 170);
+    hpEl.textContent = hp;
+    pwEl.classList.toggle('up', hp > 565);
+    $('zs').textContent = (tuDone ? 2.5 : 2.9) + ' s';
+
+    const dOn = sp > T.b[0] - .005 && sp < T.dip4[0] + .01;
+    $('dyno').classList.toggle('on', dOn);
+    if (dOn) graph(dynoK);
+  }
+
+  // dyno curve: stock vs stage 2
+  const gc = $('graph'), gx = gc.getContext('2d');
+  const curve = (r, peak) => peak * Math.min(1, Math.sin(Math.min(1, r / .78) * Math.PI / 2) ** 1.4) * (r > .86 ? 1 - (r - .86) * .9 : 1);
+  let lastG = -1;
+  function graph(k) {
+    const q = Math.round(k * 400); if (q === lastG) return; lastG = q;
+    const w = gc.clientWidth, h = gc.clientHeight, r = Math.min(devicePixelRatio || 1, 2);
+    if (gc.width !== Math.round(w * r)) { gc.width = Math.round(w * r); gc.height = Math.round(h * r); }
+    gx.setTransform(r, 0, 0, r, 0, 0); gx.clearRect(0, 0, w, h);
+    const pad = 4, X = t => pad + t * (w - pad * 2), Y = v => h - 8 - v / 800 * (h - 16);
+    gx.strokeStyle = 'rgba(238,242,245,.07)'; gx.lineWidth = 1;
+    for (let v = 200; v <= 800; v += 200) { gx.beginPath(); gx.moveTo(0, Y(v)); gx.lineTo(w, Y(v)); gx.stroke(); }
+    gx.setLineDash([4, 4]); gx.strokeStyle = '#5B6670'; gx.lineWidth = 1.5; gx.beginPath();
+    for (let t = 0; t <= 1.0001; t += .01) { const y = Y(curve(t, 565)); t ? gx.lineTo(X(t), y) : gx.moveTo(X(t), y); }
+    gx.stroke(); gx.setLineDash([]);
+    if (k > 0) {
+      gx.strokeStyle = '#22D3EE'; gx.lineWidth = 2.4; gx.shadowColor = 'rgba(34,211,238,.8)'; gx.shadowBlur = 8; gx.beginPath();
+      for (let t = 0; t <= k + 1e-6; t += .01) { const y = Y(curve(t, 760)); t ? gx.lineTo(X(t), y) : gx.moveTo(X(t), y); }
+      gx.stroke(); gx.shadowBlur = 0;
+      gx.fillStyle = '#A5F3FC'; gx.beginPath(); gx.arc(X(k), Y(curve(k, 760)), 3.5, 0, 7); gx.fill();
+    }
+    $('rpm').textContent = Math.round(1500 + k * 5600).toLocaleString('en') + ' RPM';
+  }
+
+  /* ================= loop ================= */
+  const story = $('story');
+  function measure() {
+    const r = story.getBoundingClientRect(), total = story.offsetHeight - innerHeight;
+    sp = clamp(-r.top / total);
+  }
+  function tick() { measure(); render(); overlays(); requestAnimationFrame(tick); }
+  addEventListener('resize', size);
+  size();
+
+  // first frame first, then everything else
+  const first = new Image(); first.src = 'frames/a/001.webp';
+  first.onload = () => {
+    frames.a[0] = first; $('loader').classList.add('gone'); dirty = true;
+    loadSeq('a', () => {
+      ['e1', 'e2', 'w1', 'w2', 'dyno', 'night'].forEach(still);
+      if (SEQ.b) loadSeq('b'); if (SEQ.c) loadSeq('c');
+    });
+  };
+  requestAnimationFrame(tick);
+
+  /* ================= configurator ================= */
+  const STAGES = [
+    { id: 1, name: 'Stage 1', note: 'Custom ECU map, dyno before & after', hp: 80, price: 1450 },
+    { id: 2, name: 'Stage 2', note: 'Downpipes, intakes, intercooler, custom map', hp: 195, price: 4900 },
+    { id: 3, name: 'Stage 3', note: 'Upgraded turbos, fuel system, full map', hp: 400, price: 14500 },
+  ];
+  const ADDS = [
+    { id: 'ex', name: 'Titanium exhaust', note: 'Heat-blued, valved, −9 kg', hp: 25, price: 3200 },
+    { id: 'br', name: 'Carbon-ceramic brakes', note: '410 mm discs, 6-piston calipers', hp: 0, price: 8900 },
+    { id: 'wh', name: 'Forged wheels', note: '20" monoblock, −14 kg unsprung', hp: 0, price: 5400 },
+  ];
+  const st = { stage: 2, adds: new Set(['ex']), day: 0, time: null };
+  const money = n => '$' + n.toLocaleString('en');
+  $('stageOpts').innerHTML = STAGES.map(s => `<label class="opt"><input type="radio" name="stage" value="${s.id}"${s.id === st.stage ? ' checked' : ''}><span class="box"></span>
+    <span><b>${s.name}</b><em>${s.note}</em></span><span class="pr">${money(s.price)}<small>+${s.hp} hp</small></span></label>`).join('');
+  $('addOpts').innerHTML = ADDS.map(a => `<label class="opt chk"><input type="checkbox" value="${a.id}"${st.adds.has(a.id) ? ' checked' : ''}><span class="box"></span>
+    <span><b>${a.name}</b><em>${a.note}</em></span><span class="pr">${money(a.price)}${a.hp ? `<small>+${a.hp} hp</small>` : ''}</span></label>`).join('');
+  $('stageOpts').addEventListener('change', e => { st.stage = +e.target.value; calc(); });
+  $('addOpts').addEventListener('change', e => { e.target.checked ? st.adds.add(e.target.value) : st.adds.delete(e.target.value); calc(); });
+  $('base').addEventListener('input', calc);
+  function calc() {
+    const base = Math.max(0, parseInt($('base').value, 10) || 0);
+    const s = STAGES.find(x => x.id === st.stage);
+    const gain = s.hp + ADDS.filter(a => st.adds.has(a.id)).reduce((t, a) => t + a.hp, 0);
+    const price = s.price + ADDS.filter(a => st.adds.has(a.id)).reduce((t, a) => t + a.price, 0);
+    $('estHp').textContent = base + gain; $('gain').textContent = `+${gain} hp`;
+    $('estBar').style.width = Math.min(100, (base + gain) / 1100 * 100) + '%';
+    $('total').textContent = money(price);
+  }
+
+  const TIMES = ['08:00', '09:30', '11:00', '13:00', '14:30', '16:00', '17:30', '18:30'];
+  const days = [];
+  for (let i = 1, d = new Date(); days.length < 6; i++) {          // dyno days start tomorrow, closed Sundays
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+    if (x.getDay() !== 0) days.push(x);
+  }
+  $('days').innerHTML = days.map((d, i) => `<button type="button" class="day" aria-pressed="${i === 0}">
+    <small>${d.toLocaleDateString('en', { weekday: 'short' }).toUpperCase()}</small><b>${d.getDate()}</b></button>`).join('');
+  const taken = (day, i) => ((i * 5 + day * 3) % 4) === 1;           // demo: some slots already booked
+  function times() {
+    $('times').innerHTML = TIMES.map((t, i) => `<button type="button" class="chip" aria-pressed="${st.time === t}"${taken(st.day, i) ? ' disabled' : ''}>${t}</button>`).join('');
+  }
+  $('days').addEventListener('click', e => {
+    const b = e.target.closest('.day'); if (!b) return;
+    st.day = [...$('days').children].indexOf(b); st.time = null;
+    [...$('days').children].forEach((c, j) => c.setAttribute('aria-pressed', j === st.day)); times();
+  });
+  $('times').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b || b.disabled) return; st.time = b.textContent; times(); });
+
+  const drawer = $('drawer'), scrim = $('scrim'); let lastFocus = null;
+  function open(stage) {
+    if (stage) { st.stage = +stage; document.querySelector(`#stageOpts input[value="${stage}"]`).checked = true; }
+    calc(); times();
+    $('form').hidden = false; $('foot').hidden = false; $('meter').hidden = false; $('done').hidden = true; $('err').hidden = true;
+    lastFocus = document.activeElement;
+    drawer.classList.add('on'); scrim.classList.add('on'); drawer.setAttribute('aria-hidden', 'false'); document.body.classList.add('locked');
+    setTimeout(() => $('closeBk').focus(), 50);
+  }
+  function close() {
+    drawer.classList.remove('on'); scrim.classList.remove('on'); drawer.setAttribute('aria-hidden', 'true'); document.body.classList.remove('locked');
+    if (lastFocus) lastFocus.focus();
+  }
+  document.querySelectorAll('[data-build]').forEach(b => b.addEventListener('click', () => open(b.dataset.stage)));
+  $('closeBk').addEventListener('click', close); scrim.addEventListener('click', close);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('on')) close(); });
+  $('submit').addEventListener('click', () => {
+    const miss = [];
+    if (!$('car').value.trim()) miss.push('your car');
+    if (!st.time) miss.push('a dyno time');
+    if (!$('name').value.trim()) miss.push('your name');
+    if ($('phone').value.replace(/\D/g, '').length < 7) miss.push('a phone number');
+    if (miss.length) { $('err').textContent = 'Almost there. Add ' + miss.join(', ').replace(/, ([^,]*)$/, ' and $1') + '.'; $('err').hidden = false; $('err').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    const d = days[st.day];
+    $('doneText').textContent = `${STAGES.find(x => x.id === st.stage).name} for your ${$('car').value.trim()}: about ${$('estHp').textContent} hp, ${$('total').textContent}. Drop it off ${d.toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'short' })} at ${st.time}. We'll text ${$('name').value.trim().split(' ')[0]} to confirm.`;
+    $('ref').textContent = 'HALO-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+    $('form').hidden = true; $('foot').hidden = true; $('meter').hidden = true; $('done').hidden = false;
+  });
+})();
+</script>
+</body>
+</html>
