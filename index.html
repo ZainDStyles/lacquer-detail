@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bay 7 Motor Works</title>
+<meta name="description" content="Independent garage. Free diagnostic, fixed quote before we start, most repairs done same day.">
+<meta name="theme-color" content="#0B0C0D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Big+Shoulders+Stencil+Display:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/hero.jpg" media="(min-aspect-ratio: 9/10)">
+<link rel="preload" as="image" href="assets/hero_m.jpg" media="(max-aspect-ratio: 9/10)">
+<style>
+:root {
+  --bg: #0B0C0D;
+  --panel: #131517;
+  --panel-2: #1A1D20;
+  --ink: #F2EEE8;
+  --muted: #A29D95;
+  --line: rgba(242, 238, 232, .12);
+  --accent: #FF6A13;        /* hazard orange */
+  --accent-ink: #FF8A3D;
+  --on-accent: #120A04;
+  --warn: #FFB020;
+  --ok: #4ADE80;
+  --stencil: 'Big Shoulders Stencil Display', Impact, sans-serif;
+  --sans: 'Archivo', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden; }
+body.locked { overflow: hidden; }
+button, input, textarea { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* ---------- header ---------- */
+.top {
+  position: fixed; inset: 0 0 auto 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: max(16px, env(safe-area-inset-top)) clamp(16px, 4vw, 48px) 16px;
+  background: linear-gradient(rgba(11,12,13,.75), rgba(11,12,13,0));
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo svg { width: 30px; height: 30px; color: var(--accent); }
+.logo b { font-family: var(--stencil); font-weight: 900; font-size: 26px; letter-spacing: .04em; line-height: 1; }
+.logo small { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: .22em; color: var(--muted); margin-top: 3px; }
+.nav { display: flex; gap: 28px; font-size: 13px; color: var(--muted); }
+.nav a:hover { color: var(--ink); }
+.pill {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); border: 0;
+  font-weight: 700; font-size: 14px; padding: 11px 18px; border-radius: 999px;
+  transition: transform .15s, background .15s;
+}
+.pill:hover { background: var(--accent-ink); }
+.pill:active { transform: scale(.97); }
+.pill.ghost { background: rgba(242,238,232,.08); color: var(--ink); border: 1px solid var(--line); backdrop-filter: blur(8px); }
+.pill.ghost:hover { background: rgba(242,238,232,.14); }
+.pill svg { width: 16px; height: 16px; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero::after { /* readability on the left / bottom */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(11,12,13,.82) 0%, rgba(11,12,13,.45) 34%, rgba(11,12,13,0) 55%),
+    linear-gradient(0deg, rgba(11,12,13,.9) 0%, rgba(11,12,13,0) 26%);
+}
+.copy {
+  position: absolute; z-index: 5; left: clamp(16px, 5vw, 72px); bottom: clamp(88px, 14vh, 150px);
+  max-width: 560px;
+}
+.tag {
+  display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 18px;
+}
+.tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+h1 {
+  font-family: var(--stencil); font-weight: 900; text-transform: uppercase;
+  font-size: clamp(56px, 6.9vw, 132px); line-height: .84; letter-spacing: .01em;
+}
+h1 .hot { color: var(--accent); display: block; text-shadow: 0 0 40px rgba(255,106,19,.35); }
+.lede { margin-top: 20px; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.55; color: #CFCAC2; max-width: 440px; }
+.ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+.ctas .pill { font-size: 15px; padding: 14px 22px; }
+.trust { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 26px; font-size: 12.5px; color: var(--muted); }
+.trust span { display: inline-flex; align-items: center; gap: 6px; }
+.trust b { color: var(--ink); font-weight: 600; }
+.trust svg { width: 14px; height: 14px; color: var(--accent); }
+
+/* fault readout */
+.hud {
+  position: absolute; z-index: 5; right: clamp(16px, 4vw, 48px); bottom: clamp(88px, 14vh, 150px);
+  width: 270px; padding: 14px 16px 16px; border-radius: 14px;
+  background: rgba(11,12,13,.62); border: 1px solid rgba(255,106,19,.35);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+}
+.hud .row { display: flex; justify-content: space-between; align-items: center; }
+.hud .warn { color: var(--accent); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.hud .warn svg { width: 18px; height: 18px; animation: blink 1s steps(2, start) infinite; }
+.hud .code { color: var(--muted); }
+.hud .label { color: var(--muted); margin-top: 12px; font-size: 10px; letter-spacing: .14em; }
+.hud .temp { font-size: 26px; font-weight: 700; color: var(--ink); letter-spacing: 0; }
+.hud .temp.hot { color: var(--accent); }
+.bar { height: 6px; border-radius: 3px; background: rgba(242,238,232,.1); margin-top: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ok), var(--warn) 60%, var(--accent)); transition: width .2s linear; }
+.hud .scale { display: flex; justify-content: space-between; color: #6E6A64; font-size: 9px; margin-top: 5px; }
+.hud .msg { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); color: #CFCAC2; font-size: 10.5px; line-height: 1.5; letter-spacing: .02em; }
+@keyframes blink { to { visibility: hidden; } }
+
+.cue {
+  position: absolute; z-index: 5; left: 50%; bottom: 22px; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .24em; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; white-space: nowrap;
+}
+.cue i { width: 1px; height: 30px; background: linear-gradient(var(--accent), transparent); animation: drip 1.6s ease-in-out infinite; transform-origin: top; }
+@keyframes drip { 0% { transform: scaleY(0); } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+
+/* preview footer strip */
+.next { padding: 64px clamp(16px, 5vw, 72px); border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; }
+.next p { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+
+/* ---------- booking drawer ---------- */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; z-index: 50; top: 0; right: 0; bottom: 0; width: min(460px, 100%);
+  background: var(--panel); border-left: 1px solid var(--line);
+  transform: translateX(100%); transition: transform .4s cubic-bezier(.2,.8,.2,1);
+  display: flex; flex-direction: column;
+}
+.drawer.on { transform: none; }
+.dhead { display: flex; justify-content: space-between; align-items: flex-start; padding: max(20px, env(safe-area-inset-top)) 22px 16px; border-bottom: 1px solid var(--line); }
+.dhead small { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--accent); }
+.dhead h2 { font-family: var(--stencil); font-weight: 900; font-size: 34px; text-transform: uppercase; line-height: 1; margin-top: 6px; }
+.x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; }
+.x svg { width: 18px; height: 18px; }
+.dbody { flex: 1; overflow-y: auto; padding: 4px 22px 24px; overscroll-behavior: contain; }
+.step { padding-top: 20px; }
+.step > label, .step > .lbl { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.svc { display: grid; gap: 8px; }
+.svc label {
+  display: grid; grid-template-columns: 20px 1fr auto; gap: 12px; align-items: center; cursor: pointer;
+  padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2);
+  transition: border-color .15s, background .15s;
+}
+.svc input { position: absolute; opacity: 0; pointer-events: none; }
+.svc .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #4A4743; display: grid; place-items: center; }
+.svc .dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: scale(0); transition: transform .15s; }
+.svc label:has(input:checked) { border-color: var(--accent); background: rgba(255,106,19,.07); }
+.svc label:has(input:checked) .dot { border-color: var(--accent); }
+.svc label:has(input:checked) .dot::after { transform: scale(1); }
+.svc label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.svc b { display: block; font-size: 14.5px; font-weight: 600; }
+.svc em { display: block; font-style: normal; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.svc .pr { font-family: var(--mono); font-size: 13px; }
+.field { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); outline: none; font-size: 15px; }
+.field:focus { border-color: var(--accent); }
+textarea.field { resize: vertical; min-height: 80px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip {
+  padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent;
+  font-size: 13px; cursor: pointer; transition: all .15s;
+}
+.chip[aria-pressed="true"] { border-color: var(--accent); background: rgba(255,106,19,.12); color: var(--accent-ink); }
+.chip:disabled { opacity: .3; cursor: not-allowed; text-decoration: line-through; }
+.days { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.day { padding: 10px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; text-align: center; }
+.day small { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--muted); letter-spacing: .1em; }
+.day b { font-size: 18px; }
+.day[aria-pressed="true"] { border-color: var(--accent); background: rgba(255,106,19,.1); }
+.times { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.times .chip { border-radius: 10px; padding: 9px 0; font-family: var(--mono); font-size: 12px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; }
+.toggle b { font-size: 14px; font-weight: 600; display: block; }
+.toggle em { font-style: normal; font-size: 12px; color: var(--muted); }
+.sw { width: 42px; height: 24px; border-radius: 12px; background: #34312E; position: relative; flex: none; transition: background .2s; }
+.sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); transition: transform .2s; }
+.toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.toggle:has(input:checked) .sw { background: var(--accent); }
+.toggle:has(input:checked) .sw::after { transform: translateX(18px); }
+.err { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: rgba(255,106,19,.1); color: var(--accent-ink); font-size: 13px; }
+.dfoot { border-top: 1px solid var(--line); padding: 16px 22px max(16px, env(safe-area-inset-bottom)); background: var(--panel); }
+.sum { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.sum span { font-size: 12px; color: var(--muted); }
+.sum b { font-family: var(--stencil); font-size: 34px; font-weight: 900; color: var(--accent); line-height: 1; }
+.dfoot .pill { width: 100%; justify-content: center; padding: 15px; font-size: 15px; }
+.fine { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+.done { padding: 40px 22px; text-align: center; }
+.done .ok { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 18px; display: grid; place-items: center; background: rgba(74,222,128,.12); color: var(--ok); }
+.done .ok svg { width: 30px; height: 30px; }
+.done h3 { font-family: var(--stencil); font-size: 40px; font-weight: 900; text-transform: uppercase; }
+.done p { color: #CFCAC2; margin-top: 10px; line-height: 1.55; }
+.done code { display: inline-block; margin-top: 16px; font-family: var(--mono); padding: 8px 12px; border: 1px dashed var(--accent); border-radius: 8px; color: var(--accent-ink); }
+
+/* ---------- phone ---------- */
+@media (max-aspect-ratio: 9/10) {
+  .nav { display: none; }
+  .top .pill { padding: 10px 14px; font-size: 13px; }
+  .hero::after {
+    background:
+      linear-gradient(180deg, rgba(11,12,13,.85) 0%, rgba(11,12,13,.35) 24%, rgba(11,12,13,0) 36%),
+      linear-gradient(0deg, rgba(11,12,13,.95) 0%, rgba(11,12,13,.6) 22%, rgba(11,12,13,0) 38%);
+  }
+  .copy { left: 16px; right: 16px; top: calc(max(16px, env(safe-area-inset-top)) + 64px); bottom: auto; }
+  h1 { font-size: clamp(52px, 15.5vw, 84px); }
+  .lede, .trust { display: none; }
+  .ctas { position: fixed; z-index: 6; left: 16px; right: 16px; bottom: max(18px, env(safe-area-inset-bottom)); margin: 0; flex-wrap: nowrap; }
+  .ctas .pill { flex: 1; justify-content: center; padding: 14px 10px; font-size: 14px; }
+  .hud { left: 16px; right: 16px; width: auto; bottom: calc(max(18px, env(safe-area-inset-bottom)) + 66px); padding: 10px 14px 12px; }
+  .hud .msg, .hud .scale { display: none; }
+  .hud .label { margin-top: 6px; }
+  .hud .temp { font-size: 20px; }
+  .cue { display: none; }
+}
+@media (min-aspect-ratio: 9/10) and (max-width: 1400px) {
+  .hud { width: 230px; }
+  .hud .msg { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud .warn svg, .cue i { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="#" aria-label="Bay 7 Motor Works home">
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25z" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="16" r="5" stroke="currentColor" stroke-width="2.4"/></svg>
+    <span><b>BAY 7</b><small>MOTOR WORKS</small></span>
+  </a>
+  <nav class="nav" aria-label="Main">
+    <a href="#">Repairs</a><a href="#">Servicing</a><a href="#">Prices</a><a href="#">How it works</a>
+  </nav>
+  <button class="pill" data-book>Book a repair
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </button>
+</header>
+
+<main>
+  <section class="hero" aria-label="Broken-down car outside the garage">
+    <canvas id="scene" aria-hidden="true"></canvas>
+
+    <div class="copy">
+      <p class="tag"><i></i>Open now · till 10pm</p>
+      <h1>Sounds<span class="hot">expensive?</span></h1>
+      <p class="lede">It probably isn't. Free diagnostic, a fixed quote before we touch a bolt, and most repairs done the same day.</p>
+      <div class="ctas">
+        <button class="pill" data-book>Book a repair
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <button class="pill ghost" data-book data-svc="diag">Free check</button>
+      </div>
+      <div class="trust">
+        <span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.6 7 .7-5.3 4.8 1.6 7L12 17.5 5.7 21l1.6-7L2 9.3l7-.7z"/></svg><b>4.9</b> from 1,240 drivers</span>
+        <span><b>Same-day</b> on most jobs</span>
+        <span><b>12-month</b> parts &amp; labour warranty</span>
+      </div>
+    </div>
+
+    <aside class="hud" aria-label="Fault readout">
+      <div class="row">
+        <span class="warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10h2l2-3h6l2 2h3v3h2v4h-2v2h-3l-2 2H8l-3-3H3z"/></svg>CHECK ENGINE</span>
+        <span class="code">P0217</span>
+      </div>
+      <div class="row label"><span>COOLANT TEMP</span><span id="state">RISING</span></div>
+      <div class="temp" id="temp">92°C</div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="scale"><span>60</span><span>90</span><span>120</span><span>140</span></div>
+      <p class="msg">&gt; Engine overheat detected. Pull over. We'll take it from here.</p>
+    </aside>
+
+    <div class="cue" aria-hidden="true">SCROLL TO BRING IT IN<i></i></div>
+  </section>
+
+  <section class="next">
+    <p>Preview · hero section only. The drive-in, shutter and workshop scenes come next.</p>
+    <button class="pill" data-book>Try the booking</button>
+  </section>
+</main>
+
+<!-- booking -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="bkTitle" aria-hidden="true">
+  <div class="dhead">
+    <div><small>BAY 7 · BOOKING</small><h2 id="bkTitle">Book a repair</h2></div>
+    <button class="x" id="closeBk" aria-label="Close booking">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="dbody" id="form">
+    <div class="step">
+      <span class="lbl">What do you need?</span>
+      <div class="svc" id="svc"></div>
+    </div>
+
+    <div class="step">
+      <span class="lbl">Your car</span>
+      <div class="two">
+        <input class="field" id="car" placeholder="Make & model" autocomplete="off" aria-label="Make and model">
+        <input class="field" id="reg" placeholder="Reg / plate" autocomplete="off" aria-label="Registration plate" style="text-transform:uppercase">
+      </div>
+    </div>
+
+    <div class="step">
+      <label for="issue">What's it doing?</label>
+      <div class="chips" id="symptoms"></div>
+      <textarea class="field" id="issue" placeholder="e.g. smoke from the bonnet, temperature gauge in the red"></textarea>
+    </div>
+
+    <div class="step">
+      <span class="lbl">Drop-off</span>
+      <div class="days" id="days"></div>
+      <div class="times" id="times"></div>
+    </div>
+
+    <div class="step">
+      <label class="toggle"><input type="checkbox" id="collect"><span><b>We collect it</b><em>Broken down? We'll pick it up · +$35</em></span><span class="sw"></span></label>
+    </div>
+
+    <div class="step">
+      <span class="lbl">Your details</span>
+      <div class="two">
+        <input class="field" id="name" placeholder="Name" autocomplete="name" aria-label="Name">
+        <input class="field" id="phone" placeholder="Phone" type="tel" autocomplete="tel" aria-label="Phone">
+      </div>
+      <div class="err" id="err" hidden></div>
+    </div>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div>
+    <h3>You're booked</h3>
+    <p id="doneText"></p>
+    <code id="ref"></code>
+  </div>
+
+  <div class="dfoot" id="foot">
+    <div class="sum"><span id="sumLbl">Estimate</span><b id="total">$0</b></div>
+    <button class="pill" id="submit">Confirm booking</button>
+    <p class="fine">Fixed quote after the free check. Nothing extra without your OK.</p>
+  </div>
+</aside>
+
+<script>
+(() => {
+  /* ================= scene: photo + smoke + rain + hazard lights ================= */
+  const cv = document.getElementById('scene');
+  const ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isPhone = () => innerWidth / innerHeight < .9;
+
+  // where things sit in each photo (0..1 of the image)
+  const SHOTS = {
+    d: { src: 'assets/hero.jpg', focus: [.62, .55], car: .48,
+         smoke: { x: [.53, .64], y: [.505, .54], drift: -1 },
+         lamps: [[.44, .606, 1], [.703, .602, 1], [.8125, .509, .55]] },
+    m: { src: 'assets/hero_m.jpg', focus: [.5, .55], car: .64,
+         smoke: { x: [.33, .5], y: [.56, .58], drift: -1 },
+         lamps: [[.245, .599, 1], [.574, .596, 1], [.722, .553, .55]] },
+  };
+  const imgs = {};
+  let shot, W = 0, H = 0, dpr = 1, place = null;
+
+  function load(k) {
+    if (imgs[k]) return imgs[k];
+    const im = new Image(); im.decoding = 'async'; im.src = SHOTS[k].src;
+    im.onload = () => { if (shot === SHOTS[k]) layout(); };
+    return (imgs[k] = im);
+  }
+  function layout() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const k = isPhone() ? 'm' : 'd';
+    shot = SHOTS[k];
+    const im = load(k);
+    if (!im.naturalWidth) { place = null; return; }
+    // cover-fit, keeping the car (focus) in view
+    const s = Math.max(W / im.naturalWidth, H / im.naturalHeight) * 1.04;
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    const x = Math.min(0, Math.max(W - w, W / 2 - w * shot.focus[0] + (isPhone() ? 0 : W * .06)));
+    const y = Math.min(0, Math.max(H - h, H / 2 - h * shot.focus[1]));
+    place = { im, x, y, w, h };
+  }
+  const P = (u, v) => [place.x + u * place.w, place.y + v * place.h];
+  const U = () => place.w * shot.car / 770;   // 1 = car as wide as on a 1600px desktop photo
+
+  // soft smoke puff sprite
+  const puff = document.createElement('canvas'); puff.width = puff.height = 128;
+  { const g = puff.getContext('2d'), r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    r.addColorStop(0, 'rgba(220,220,215,.55)'); r.addColorStop(.45, 'rgba(200,200,195,.22)'); r.addColorStop(1, 'rgba(190,190,185,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 128, 128); }
+
+  const puffs = [], drops = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function spawnPuff() {
+    const sm = shot.smoke, [x, y] = P(rnd(sm.x[0], sm.x[1]), rnd(sm.y[0], sm.y[1]));
+    const u = U();   // scale with the photo
+    puffs.push({ x, y, r: rnd(18, 34) * u, vx: rnd(-14, 6) * u + sm.drift * 8 * u, vy: rnd(-46, -28) * u,
+                 grow: rnd(16, 26) * u, a: 0, life: 0, max: rnd(3.2, 5.2), rot: rnd(0, 6.28), vr: rnd(-.3, .3) });
+  }
+  for (let i = 0; i < 140; i++) drops.push({ x: Math.random(), y: Math.random(), l: rnd(14, 34), s: rnd(900, 1500), a: rnd(.06, .2) });
+
+  let heat = 0;          // 0..1 — rises with time and scroll
+  let last = performance.now(), acc = 0;
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (place) {
+      const scroll = Math.min(1, scrollY / (innerHeight * .8));
+      heat = Math.min(1, heat + dt * .12);
+      const level = Math.min(1, .55 + heat * .3 + scroll * .5);   // smoke thickness
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // photo, with a slow push-in as you scroll
+      const z = 1 + scroll * .05, cx = W / 2, cy = H * .6;
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(z, z); ctx.translate(-cx, -cy);
+      ctx.drawImage(place.im, place.x, place.y, place.w, place.h);
+
+      // hazard lights: ~1.4 Hz, soft on/off
+      const t = now / 1000, ph = (t * 1.4) % 1, on = ph < .5 ? Math.sin(Math.min(1, ph / .08) * Math.PI / 2) : Math.max(0, 1 - (ph - .5) / .12);
+      if (on > 0) {
+        ctx.globalCompositeOperation = 'lighter';
+        const u = U();
+        for (const [lx, ly, k] of shot.lamps) {
+          const [x, y] = P(lx, ly), R = 70 * u * k;
+          const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+          g.addColorStop(0, `rgba(255,190,90,${.85 * on * k})`); g.addColorStop(.25, `rgba(255,120,20,${.45 * on * k})`); g.addColorStop(1, 'rgba(255,90,0,0)');
+          ctx.fillStyle = g; ctx.fillRect(x - R, y - R, R * 2, R * 2);
+        }
+        // amber spill on the wet ground
+        const [gx, gy] = P((shot.lamps[0][0] + shot.lamps[1][0]) / 2, Math.min(.98, shot.lamps[0][1] + .16));
+        const R2 = 260 * u, g2 = ctx.createRadialGradient(gx, gy, 0, gx, gy, R2);
+        g2.addColorStop(0, `rgba(255,110,20,${.12 * on})`); g2.addColorStop(1, 'rgba(255,110,20,0)');
+        ctx.fillStyle = g2; ctx.fillRect(gx - R2, gy - R2, R2 * 2, R2 * 2);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      // smoke
+      if (!reduce) {
+        acc += dt * (10 + level * 26);
+        while (acc > 1) { spawnPuff(); acc--; }
+      } else if (!puffs.length) for (let i = 0; i < 40; i++) { spawnPuff(); puffs[i].life = rnd(0, 3); }
+      for (let i = puffs.length - 1; i >= 0; i--) {
+        const p = puffs[i];
+        if (!reduce) { p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.grow * dt; p.rot += p.vr * dt; p.vx -= 4 * dt * U(); }
+        if (p.life > p.max) { puffs.splice(i, 1); continue; }
+        const k = p.life / p.max, a = (k < .15 ? k / .15 : 1 - (k - .15) / .85) * (.35 + level * .45);
+        ctx.globalAlpha = a;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.drawImage(puff, -p.r, -p.r, p.r * 2, p.r * 2); ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+
+      // rain (screen space, in front)
+      if (!reduce) {
+        ctx.strokeStyle = 'rgba(210,220,230,1)'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (const d of drops) {
+          d.y += d.s * dt / H; if (d.y > 1.05) { d.y = -.05; d.x = Math.random(); }
+          const x = d.x * W, y = d.y * H;
+          ctx.globalAlpha = d.a; ctx.moveTo(x, y); ctx.lineTo(x - d.l * .18, y + d.l);
+          ctx.stroke(); ctx.beginPath();
+        }
+        ctx.globalAlpha = 1;
+      }
+      hud(level);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // fault readout: coolant creeps into the red
+  const tempEl = document.getElementById('temp'), barEl = document.getElementById('bar'), stEl = document.getElementById('state');
+  let shown = -1;
+  function hud(level) {
+    const c = Math.round(92 + (Math.min(1, heat * 1.2) * .7 + Math.min(1, scrollY / innerHeight) * .3) * 39);
+    if (c === shown) return; shown = c;
+    tempEl.textContent = c + '°C';
+    tempEl.classList.toggle('hot', c >= 115);
+    barEl.style.width = Math.min(100, (c - 60) / 80 * 100) + '%';
+    stEl.textContent = c >= 125 ? 'CRITICAL' : c >= 110 ? 'HIGH' : 'RISING';
+  }
+
+  addEventListener('resize', layout);
+  layout();
+  requestAnimationFrame(frame);
+
+  /* ================= booking ================= */
+  const SERVICES = [
+    { id: 'diag', name: 'Diagnostic check', note: 'Warning lights, smoke, noises · 45 min', price: 0, label: 'Free' },
+    { id: 'repair', name: 'Repair', note: 'Overheating, leaks, electrics · fixed quote first', price: 120, label: 'from $120' },
+    { id: 'service', name: 'Full service', note: 'Oil, filters, fluids, 60-point check', price: 189, label: '$189' },
+    { id: 'brakes', name: 'Brakes', note: 'Pads & discs, one axle', price: 149, label: 'from $149' },
+    { id: 'inspect', name: 'Inspection / MOT', note: 'Pass or we tell you exactly why', price: 59, label: '$59' },
+  ];
+  const SYMPTOMS = ['Smoke / steam', 'Warning light', 'Strange noise', "Won't start", 'Leaking'];
+  const TIMES = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00', '18:30'];
+  const $ = id => document.getElementById(id);
+  const state = { svc: 'repair', day: 0, time: null, sym: new Set() };
+
+  $('svc').innerHTML = SERVICES.map(s => `
+    <label><input type="radio" name="svc" value="${s.id}"${s.id === state.svc ? ' checked' : ''}><span class="dot"></span>
+      <span><b>${s.name}</b><em>${s.note}</em></span><span class="pr">${s.label}</span></label>`).join('');
+  $('svc').addEventListener('change', e => { state.svc = e.target.value; total(); });
+
+  $('symptoms').innerHTML = SYMPTOMS.map(s => `<button type="button" class="chip" aria-pressed="false">${s}</button>`).join('');
+  $('symptoms').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+    on ? state.sym.add(b.textContent) : state.sym.delete(b.textContent);
+  });
+
+  const days = [];
+  for (let i = 0, d = new Date(); days.length < 6; i++) {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+    if (x.getDay() !== 0) days.push(x);     // closed Sundays
+  }
+  $('days').innerHTML = days.map((d, i) => `<button type="button" class="day" aria-pressed="${i === 0}">
+    <small>${i === 0 ? 'TODAY' : d.toLocaleDateString('en', { weekday: 'short' }).toUpperCase()}</small><b>${d.getDate()}</b></button>`).join('');
+  $('days').addEventListener('click', e => {
+    const b = e.target.closest('.day'); if (!b) return;
+    pickDay([...$('days').children].indexOf(b));
+  });
+  const taken = (day, i) => {
+    const now = new Date(), [h, m] = TIMES[i].split(':').map(Number);
+    const past = days[day].toDateString() === now.toDateString() && h * 60 + m < now.getHours() * 60 + now.getMinutes() + 30;
+    return past || ((i * 7 + day * 3) % 5) === 1;       // demo: a few slots already booked
+  };
+  function times() {
+    $('times').innerHTML = TIMES.map((t, i) =>
+      `<button type="button" class="chip" aria-pressed="${state.time === t}"${taken(state.day, i) ? ' disabled' : ''}>${t}</button>`).join('');
+  }
+  function pickDay(i) {
+    state.day = i; state.time = null;
+    [...$('days').children].forEach((c, j) => c.setAttribute('aria-pressed', j === i));
+    times();
+  }
+  // nothing left today (late in the day)? start on the next open day
+  const firstFree = days.findIndex((_, d) => TIMES.some((_, i) => !taken(d, i)));
+  $('times').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b || b.disabled) return;
+    state.time = b.textContent; times();
+  });
+  $('collect').addEventListener('change', total);
+
+  function total() {
+    const s = SERVICES.find(x => x.id === state.svc);
+    const t = s.price + ($('collect').checked ? 35 : 0);
+    $('total').textContent = '$' + t;
+    $('sumLbl').textContent = s.id === 'repair' || s.id === 'brakes' ? 'Estimate from' : 'Total';
+  }
+
+  const drawer = $('drawer'), scrim = $('scrim');
+  let lastFocus = null;
+  function open(svc) {
+    if (svc) { state.svc = svc; document.querySelector(`#svc input[value="${svc}"]`).checked = true; }
+    total();
+    if (!state.time) pickDay(state.day === 0 ? Math.max(0, firstFree) : state.day); else times();
+    $('form').hidden = false; $('foot').hidden = false; $('done').hidden = true; $('err').hidden = true;
+    lastFocus = document.activeElement;
+    drawer.classList.add('on'); scrim.classList.add('on'); drawer.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('locked');
+    setTimeout(() => $('closeBk').focus(), 50);
+  }
+  function close() {
+    drawer.classList.remove('on'); scrim.classList.remove('on'); drawer.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('locked');
+    if (lastFocus) lastFocus.focus();
+  }
+  document.querySelectorAll('[data-book]').forEach(b => b.addEventListener('click', () => open(b.dataset.svc)));
+  $('closeBk').addEventListener('click', close);
+  scrim.addEventListener('click', close);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('on')) close(); });
+
+  $('submit').addEventListener('click', () => {
+    const miss = [];
+    if (!$('car').value.trim()) miss.push('your car');
+    if (!state.time) miss.push('a drop-off time');
+    if (!$('name').value.trim()) miss.push('your name');
+    if ($('phone').value.replace(/\D/g, '').length < 7) miss.push('a phone number');
+    if (miss.length) {
+      $('err').textContent = 'Almost there. Add ' + miss.join(', ').replace(/, ([^,]*)$/, ' and $1') + '.';
+      $('err').hidden = false; $('err').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return;
+    }
+    const d = days[state.day], s = SERVICES.find(x => x.id === state.svc);
+    $('doneText').textContent = `${s.name} for your ${$('car').value.trim()}, ${d.toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'short' })} at ${state.time}${$('collect').checked ? '. We\'ll collect it from you.' : '.'} We'll text ${$('name').value.trim().split(' ')[0]} a fixed quote before any work starts.`;
+    $('ref').textContent = 'BAY7-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+    $('form').hidden = true; $('foot').hidden = true; $('done').hidden = false;
+  });
+})();
+</script>
+</body>
+</html>
